@@ -115,13 +115,19 @@
       font-size: 0.85rem;
     }
 
-    .mirror-toggle {
+    .mirror-toggle,
+    .small-row {
       display: flex;
       align-items: center;
       gap: 6px;
       margin-top: 4px;
       cursor: pointer;
       font-size: 0.9rem;
+    }
+
+    .small-row {
+      cursor: default;
+      font-size: 0.8rem;
     }
 
     .note {
@@ -232,14 +238,6 @@
       flex: 1;
     }
 
-    .small-row {
-      font-size: 0.8rem;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-top: 4px;
-    }
-
     /* SVG arrow styling */
     .arrow-line {
       cursor: pointer;
@@ -264,11 +262,12 @@
       <div class="field-card">
         <svg id="fieldSvg" viewBox="-75 -75 150 150">
           <defs>
-            <!-- we will create per-arrow markers in JS -->
+            <!-- per-arrow markers will be inserted here from JS -->
           </defs>
 
           <!-- Outer field (68m radius) -->
           <circle
+            id="outerField"
             cx="0" cy="0" r="68"
             fill="#b7e0ab"
             stroke="#0b6820" stroke-width="0.7"
@@ -276,14 +275,16 @@
 
           <!-- Outer border -->
           <circle
+            id="outerBorder"
             cx="0" cy="0" r="68"
             fill="none"
             stroke="#1b4d1a"
             stroke-width="1"
           ></circle>
 
-          <!-- Inner 30-yard circle -->
+          <!-- Inner 30-yard circle (stays centered) -->
           <circle
+            id="innerCircle"
             cx="0" cy="0" r="27.432"
             fill="none"
             stroke="#0b6820"
@@ -291,7 +292,7 @@
             stroke-width="0.5"
           ></circle>
 
-          <!-- Pitch -->
+          <!-- Pitch (stays at center / wicket) -->
           <rect
             x="-2.5" y="-10" width="5" height="20"
             rx="1.5" ry="1.5"
@@ -333,6 +334,33 @@
                 opacity="0.3"
                 stroke="none"></path>
 
+          <!-- Minimal wind legend (top-right) -->
+          <g id="windLegend">
+            <text
+              id="windLabel"
+              x="60" y="-68"
+              text-anchor="middle"
+              font-size="4"
+              fill="#000000"
+            >WIND</text>
+            <g id="windArrowGroup" transform="translate(60,-60)">
+              <!-- two small straight arrows -->
+              <line x1="-8" y1="-1" x2="8" y2="-1"
+                    stroke="#2563eb"
+                    stroke-width="1.1"
+                    stroke-linecap="round"></line>
+              <polygon points="8,-1 4,-3 4,1"
+                       fill="#2563eb"></polygon>
+
+              <line x1="-8" y1="2" x2="8" y2="2"
+                    stroke="#2563eb"
+                    stroke-width="1.1"
+                    stroke-linecap="round"></line>
+              <polygon points="8,2 4,0 4,4"
+                       fill="#2563eb"></polygon>
+            </g>
+          </g>
+
           <!-- Arrows -->
           <g id="arrowsGroup"></g>
 
@@ -346,10 +374,20 @@
       <!-- Global settings -->
       <div class="controls-section">
         <h2>Global Settings</h2>
+
         <div class="slider-row">
           <span>Fielder size</span>
           <input type="range" id="sizeSlider" min="1" max="5" step="0.2" value="2.5" />
         </div>
+
+        <div class="slider-row">
+          <span>Boundary offset (m)</span>
+          <input type="range" id="boundaryOffset" min="-10" max="10" step="1" value="0" />
+        </div>
+        <div class="note">
+          Use about ±7m to simulate a short boundary on one side.
+        </div>
+
         <label class="mirror-toggle">
           <input type="checkbox" id="mirrorToggle" />
           Mirror field (off/leg & fielders)
@@ -358,7 +396,6 @@
           <input type="checkbox" id="hideAllLabels" />
           Hide all fielder labels
         </label>
-        <div class="note">Labels can also be hidden per fielder.</div>
       </div>
 
       <!-- Fielder controls -->
@@ -394,6 +431,17 @@
           <input type="range" id="sectorEnd" min="0" max="360" step="5" value="40" />
         </div>
         <div class="note">Angles are from center, in degrees, around the full circle.</div>
+
+        <h3 style="margin-top:8px;font-size:0.9rem;">Wind</h3>
+        <label class="small-row">
+          <input type="checkbox" id="windVisible" checked />
+          Show wind legend
+        </label>
+        <div class="slider-row">
+          <span>Wind direction</span>
+          <input type="range" id="windDirection" min="0" max="360" step="15" value="0" />
+        </div>
+        <div class="note">0° = blowing to the right, 90° = up, 180° = left, 270° = down.</div>
       </div>
     </div>
   </div>
@@ -404,10 +452,15 @@
 
       const svg = document.getElementById("fieldSvg");
       const defs = svg.querySelector("defs");
+      const outerFieldCircle = document.getElementById("outerField");
+      const outerBorderCircle = document.getElementById("outerBorder");
+      const innerCircle = document.getElementById("innerCircle");
+
       const fieldersGroup = document.getElementById("fieldersGroup");
       const arrowsGroup = document.getElementById("arrowsGroup");
       const fielderControls = document.getElementById("fielderControls");
       const sizeSlider = document.getElementById("sizeSlider");
+      const boundaryOffsetInput = document.getElementById("boundaryOffset");
       const mirrorToggle = document.getElementById("mirrorToggle");
       const hideAllLabels = document.getElementById("hideAllLabels");
       const offLabel = document.getElementById("offLabel");
@@ -422,12 +475,18 @@
       const sectorStartInput = document.getElementById("sectorStart");
       const sectorEndInput = document.getElementById("sectorEnd");
 
+      const windLegend = document.getElementById("windLegend");
+      const windArrowGroup = document.getElementById("windArrowGroup");
+      const windVisibleCheckbox = document.getElementById("windVisible");
+      const windDirectionInput = document.getElementById("windDirection");
+
       const FIELD_RADIUS = 68;
       const FIELDER_COUNT = 11;
 
       let fielderSize = parseFloat(sizeSlider.value);
       let isMirrored = false;
       let labelsHiddenAll = false;
+      let fieldOffsetX = 0; // meters (SVG units)
 
       const fielders = [];
       let activeFielder = null;
@@ -471,7 +530,6 @@
           const logicalX = ring * Math.cos(angle);
           const logicalY = ring * Math.sin(angle);
 
-          // Highlight ring
           const ringCircle = document.createElementNS(SVG_NS, "circle");
           ringCircle.setAttribute("fill", "none");
           ringCircle.setAttribute("stroke", "#ef4444");
@@ -479,7 +537,6 @@
           ringCircle.style.display = "none";
           ringCircle.style.pointerEvents = "none";
 
-          // Main fielder circle
           const circle = document.createElementNS(SVG_NS, "circle");
           circle.setAttribute("r", fielderSize.toString());
           circle.setAttribute("stroke", "#222");
@@ -488,7 +545,6 @@
           circle.dataset.index = i.toString();
           circle.classList.add("fielder-circle");
 
-          // Label
           const label = document.createElementNS(SVG_NS, "text");
           label.setAttribute("text-anchor", "middle");
           label.setAttribute("dominant-baseline", "central");
@@ -496,7 +552,6 @@
           label.setAttribute("fill", "#111");
           label.style.pointerEvents = "none";
 
-          // Append in this order so ring is around/behind marker
           fieldersGroup.appendChild(ringCircle);
           fieldersGroup.appendChild(circle);
           fieldersGroup.appendChild(label);
@@ -573,7 +628,6 @@
           header.textContent = `Fielder ${f.i + 1}`;
           row.appendChild(header);
 
-          // Label input
           const labelWrapper = document.createElement("label");
           labelWrapper.textContent = "Label";
           const labelInput = document.createElement("input");
@@ -584,7 +638,6 @@
           labelWrapper.appendChild(labelInput);
           row.appendChild(labelWrapper);
 
-          // Color input
           const colorWrapper = document.createElement("label");
           colorWrapper.textContent = "Color";
           const colorInput = document.createElement("input");
@@ -594,7 +647,6 @@
           colorWrapper.appendChild(colorInput);
           row.appendChild(colorWrapper);
 
-          // Hide label checkbox
           const hideWrapper = document.createElement("label");
           hideWrapper.textContent = "Hide label";
           const hideInput = document.createElement("input");
@@ -604,7 +656,6 @@
           hideWrapper.appendChild(hideInput);
           row.appendChild(hideWrapper);
 
-          // Highlight ring checkbox
           const highlightWrapper = document.createElement("label");
           highlightWrapper.textContent = "Highlight (red ring)";
           const highlightInput = document.createElement("input");
@@ -646,6 +697,15 @@
         });
       }
 
+      // BOUNDARY OFFSET ----------------------------------------------------------
+      function updateFieldOffset() {
+        fieldOffsetX = parseFloat(boundaryOffsetInput.value) || 0;
+        outerFieldCircle.setAttribute("cx", fieldOffsetX.toString());
+        outerBorderCircle.setAttribute("cx", fieldOffsetX.toString());
+        // innerCircle stays at cx = 0 on purpose
+        updateSectorPath();
+      }
+
       // ARROWS -------------------------------------------------------------------
       function getArrowById(id) {
         return arrows.find((a) => a.id === id);
@@ -660,12 +720,10 @@
         arrow.lineEl.setAttribute("stroke-width", arrow.width.toString());
         arrow.lineEl.setAttribute("opacity", arrow.opacity.toString());
 
-        // Arrow head color
         if (arrow.markerPathEl) {
           arrow.markerPathEl.setAttribute("fill", arrow.color);
         }
 
-        // Handles match arrow color
         arrow.handleStartEl.setAttribute("stroke", arrow.color);
         arrow.handleEndEl.setAttribute("stroke", arrow.color);
         arrow.handleStartEl.setAttribute("fill", arrow.color);
@@ -774,7 +832,6 @@
         line.setAttribute("stroke-width", "1.2");
         line.setAttribute("opacity", "0.85");
 
-        // per-arrow marker
         const markerId = "arrowHead-" + id;
         const marker = document.createElementNS(SVG_NS, "marker");
         marker.setAttribute("id", markerId);
@@ -910,16 +967,17 @@
         const sweepFlag = 1;
 
         const R = FIELD_RADIUS;
+        const CX = fieldOffsetX; // center of outer boundary
         const startRad = degToRad(start);
         const endRad = degToRad(end);
 
-        const x1 = R * Math.cos(startRad);
+        const x1 = CX + R * Math.cos(startRad);
         const y1 = R * Math.sin(startRad);
-        const x2 = R * Math.cos(endRad);
+        const x2 = CX + R * Math.cos(endRad);
         const y2 = R * Math.sin(endRad);
 
         const d = [
-          "M 0 0",
+          "M", CX, 0,
           "L", x1, y1,
           "A", R, R, 0, largeArcFlag, sweepFlag, x2, y2,
           "Z"
@@ -928,11 +986,24 @@
         sectorPath.setAttribute("d", d);
       }
 
+      // WIND LEGEND --------------------------------------------------------------
+      function updateWindVisibility() {
+        windLegend.style.display = windVisibleCheckbox.checked ? "block" : "none";
+      }
+
+      function updateWindDirection() {
+        const angle = parseFloat(windDirectionInput.value) || 0;
+        // rotate arrows around their local origin (0,0), then position at (60,-60)
+        windArrowGroup.setAttribute(
+          "transform",
+          "rotate(" + angle + ") translate(60,-60)"
+        );
+      }
+
       // POINTER HANDLING ---------------------------------------------------------
       function handlePointerDown(evt) {
         const target = evt.target;
 
-        // Arrow interaction
         if (
           target.classList.contains("arrow-line") ||
           target.classList.contains("arrow-handle")
@@ -941,7 +1012,6 @@
           return;
         }
 
-        // Fielder dragging
         if (target.classList.contains("fielder-circle")) {
           const idx = parseInt(target.dataset.index || "-1", 10);
           if (!isNaN(idx) && idx >= 0 && idx < fielders.length) {
@@ -954,7 +1024,6 @@
       }
 
       function handlePointerMove(evt) {
-        // Move fielder
         if (activeFielder) {
           const { x, y } = getSvgCoords(evt);
           const clamped = clampToCircle(
@@ -969,7 +1038,6 @@
           updateFielderVisual(activeFielder);
         }
 
-        // Move / resize arrow
         if (activeArrow) {
           arrowPointerMove(evt);
         }
@@ -995,6 +1063,10 @@
       sizeSlider.addEventListener("input", () => {
         fielderSize = parseFloat(sizeSlider.value);
         updateAllFielders();
+      });
+
+      boundaryOffsetInput.addEventListener("input", () => {
+        updateFieldOffset();
       });
 
       mirrorToggle.addEventListener("change", () => {
@@ -1031,11 +1103,22 @@
         updateSectorPath();
       });
 
+      windVisibleCheckbox.addEventListener("change", () => {
+        updateWindVisibility();
+      });
+
+      windDirectionInput.addEventListener("input", () => {
+        updateWindDirection();
+      });
+
       // INIT ---------------------------------------------------------------------
       createInitialFielders();
       buildFielderControls();
       updateSideLabels();
+      updateFieldOffset();
       updateSectorPath();
+      updateWindVisibility();
+      updateWindDirection();
     })();
   </script>
 </body>
