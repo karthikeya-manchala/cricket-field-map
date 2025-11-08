@@ -662,6 +662,8 @@
         arrow.lineEl.setAttribute("x2", arrow.x2.toString());
         arrow.lineEl.setAttribute("y2", arrow.y2.toString());
         arrow.lineEl.setAttribute("stroke", arrow.color);
+        arrow.handleStartEl.setAttribute("stroke", arrow.color);
+        arrow.handleEndEl.setAttribute("stroke", arrow.color);
         arrow.lineEl.setAttribute("stroke-width", arrow.width.toString());
         arrow.lineEl.setAttribute("opacity", arrow.opacity.toString());
 
@@ -768,6 +770,8 @@
         handleStart.dataset.id = id.toString();
         handleStart.dataset.handle = "start";
         handleStart.setAttribute("r", "1.4");
+        handleStart.style.display = "none";
+        handleEnd.style.display = "none";
 
         const handleEnd = document.createElementNS(
           "http://www.w3.org/2000/svg",
@@ -815,6 +819,8 @@
 
         prevArrowPointer = getSvgCoords(evt);
         evt.preventDefault();
+        arrow.handleStartEl.style.display = "block";
+        arrow.handleEndEl.style.display = "block";
       }
 
       function arrowPointerMove(evt) {
@@ -954,6 +960,10 @@
         activeArrow = null;
         arrowDragMode = null;
         prevArrowPointer = null;
+        if (activeArrow) {
+          activeArrow.handleStartEl.style.display = "none";
+          activeArrow.handleEndEl.style.display = "none";
+          }
       }
 
       // EVENTS -------------------------------------------------------------------
