@@ -316,14 +316,29 @@
         <!-- widened viewBox so shifted boundary never clips -->
         <svg id="fieldSvg" viewBox="-80 -80 160 160">
           <defs>
+            <!-- Gradient for field (lighter center, darker edge) -->
+            <radialGradient id="fieldGradient" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="68">
+              <stop offset="0%" stop-color="#cfecc3" />
+              <stop offset="55%" stop-color="#bfe4b1" />
+              <stop offset="100%" stop-color="#9ccd93" />
+            </radialGradient>
             <!-- per-arrow markers will be inserted here from JS -->
           </defs>
+
+          <!-- Soft shadow under field for slight 3D lift -->
+          <ellipse
+            id="fieldShadow"
+            cx="0" cy="6"
+            rx="72" ry="10"
+            fill="rgba(0,0,0,0.16)"
+            style="pointer-events:none;"
+          ></ellipse>
 
           <!-- Outer field (68m radius) -->
           <circle
             id="outerField"
             cx="0" cy="0" r="68"
-            fill="#b7e0ab"
+            fill="url(#fieldGradient)"
             stroke="#0b6820" stroke-width="0.7"
           ></circle>
 
@@ -333,7 +348,7 @@
             cx="0" cy="0" r="68"
             fill="none"
             stroke="#1b4d1a"
-            stroke-width="1"
+            stroke-width="1.1"
           ></circle>
 
           <!-- Inner 30-yard circle (stays centered) -->
@@ -615,18 +630,18 @@
           });
         }
 
-        // Override with preset positions for F1–F9 to match the example layout
+        // Preset positions for F1–F9 (roughly matching your example)
         const presetPositions = [
-          { i: 0, x: 12,  y: -20 },   // F1 - short fine
-          { i: 1, x: -32,  y: -54 },  // F2 - deep third
-          { i: 2, x: -19,  y: -11 },  // F3 - backward point
-          { i: 3, x: -24, y: 0 },   // F4 - point
-          { i: 4, x: -20,   y: 13 },  // F5 - cover
-          { i: 5, x: -19, y: 59 },  // F6 - long off
-          { i: 6, x: 30, y: 56 }, // F7 - long on
-          { i: 7, x: 59,   y: 24 }, // F8 - deep midwicket
-          { i: 8, x: 61,  y: -16 }, // F9 - deep backward square
-          // F10 (9) and F11 (10) stay on the default ring
+          { i: 0, x: 60,  y: 0  },  // F1
+          { i: 1, x: 50,  y: 25 },  // F2
+          { i: 2, x: 25,  y: 55 },  // F3
+          { i: 3, x: -20, y: 5  },  // F4
+          { i: 4, x: 0,   y: 60 },  // F5
+          { i: 5, x: -45, y: 35 },  // F6
+          { i: 6, x: -18, y: -10},  // F7
+          { i: 7, x: 0,   y: -20},  // F8
+          { i: 8, x: 18,  y: -10},  // F9
+          // F10 (9) and F11 (10) remain on default ring
         ];
 
         presetPositions.forEach(pos => {
@@ -654,7 +669,6 @@
       }
 
       function updateFielderVisual(f) {
-        // Hide fielders that are not active in current mode
         if (!isFielderActive(f)) {
           f.circle.style.display = "none";
           f.label.style.display = "none";
@@ -788,7 +802,6 @@
         // innerCircle stays centered
         updateSectorPath();
 
-        // update numeric display
         boundaryOffsetValue.textContent = fieldOffsetX.toString();
       }
 
@@ -1079,7 +1092,6 @@
 
       function updateWindDirection() {
         const angle = windDirection === "right" ? 0 : 180;
-        // rotate around its own center (0,0 in local coords), then translated to top-right
         windArrowGroup.setAttribute(
           "transform",
           "translate(60,-60) rotate(" + angle + ")"
