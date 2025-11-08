@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cricket Field & Fielder Placement Visualizer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --field-radius-m: 75;
+      --inner-circle-m: 27.432; /* 30 yards in meters */
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f6f3ed;
+      color: #222;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      min-height: 100vh;
+    }
+
+    h1 {
+      margin: 16px 16px 0;
+      font-size: 1.8rem;
+      text-align: center;
+    }
+
+    .subtitle {
+      text-align: center;
+      margin: 4px 16px 12px;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .layout {
+      display: flex;
+      flex: 1;
+      padding: 12px 16px 20px;
+      gap: 16px;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        flex-direction: column;
+      }
+    }
+
+    .field-wrapper {
+      flex: 1 1 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+    }
+
+    .field-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      padding: 12px;
+      width: 100%;
+      max-width: 640px;
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #fieldSvg {
+      width: 100%;
+      height: 100%;
+      touch-action: none; /* helps with pointer events */
+    }
+
+    .controls {
+      flex: 0 0 320px;
+      max-width: 360px;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: calc(100vh - 120px);
+    }
+
+    @media (max-width: 900px) {
+      .controls {
+        max-width: 100%;
+        max-height: none;
+      }
+    }
+
+    .controls-section {
+      margin-bottom: 8px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 8px;
+    }
+
+    .controls-section:last-of-type {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .controls-section h2 {
+      font-size: 1rem;
+      margin: 4px 0 6px;
+    }
+
+    .controls-section label {
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin: 2px 0;
+    }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .slider-row span {
+      font-size: 0.85rem;
+      color: #555;
+    }
+
+    input[type="range"] {
+      flex: 1;
+    }
+
+    .fielder-list {
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .fielder-row {
+      border-radius: 10px;
+      padding: 6px 8px;
+      margin-bottom: 6px;
+      background: #faf7f3;
+      border: 1px solid #eee;
+    }
+
+    .fielder-row-header {
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .fielder-row label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .fielder-row input[type="text"] {
+      flex: 1;
+      margin-left: 6px;
+      padding: 2px 4px;
+      font-size: 0.85rem;
+    }
+
+    .fielder-row input[type="color"] {
+      margin-left: 6px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      width: 28px;
+      height: 20px;
+    }
+
+    .mirror-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .mirror-toggle input {
+      accent-color: #0b6820;
+    }
+
+    /* Utility */
+    .note {
+      font-size: 0.75rem;
+      color: #777;
+      margin-top: 2px;
+    }
+
+  </style>
+</head>
+<body>
+  <h1>Cricket Field Placement Visualizer</h1>
+  <div class="subtitle">Drag fielders, set colors & labels, and mirror off/leg side for different batters.</div>
+
+  <div class="layout">
+    <div class="field-wrapper">
+      <div class="field-card">
+        <!-- SVG in "meters" coordinates, centered at 0,0 -->
+        <svg id="fieldSvg" viewBox="-80 -80 160 160">
+          <!-- Outer field circle (75m) -->
+          <circle
+            cx="0"
+            cy="0"
+            r="75"
+            fill="#d8f0d4"
+            stroke="#0b6820"
+            stroke-width="0.7"
+          ></circle>
+
+          <!-- Inner 30-yard circle (27.432m) -->
+          <circle
+            cx="0"
+            cy="0"
+            r="27.432"
+            fill="none"
+            stroke="#0b6820"
+            stroke-dasharray="1.2 1.2"
+            stroke-width="0.5"
+          ></circle>
+
+          <!-- Pitch strip -->
+          <rect
+            x="-2.5"
+            y="-10"
+            width="5"
+            height="20"
+            rx="1.5"
+            ry="1.5"
+            fill="#e0c6a2"
+            stroke="#b89463"
+            stroke-width="0.4"
+          ></rect>
+
+          <!-- Stumps (just for reference) -->
+          <rect x="-0.6" y="-10.5" width="1.2" height="1.3" fill="#444"></rect>
+          <rect x="-0.6" y="9.2" width="1.2" height="1.3" fill="#444"></rect>
+
+          <!-- Side labels -->
+          <text
+            id="offLabel"
+            x="-45"
+            y="0"
+            text-anchor="middle"
+            dominant-baseline="middle"
+            font-size="10"
+            fill="#004b23"
+            opacity="0.18"
+            style="letter-spacing: 2px;"
+          >
+            OFF SIDE
+          </text>
+
+          <text
+            id="legLabel"
+            x="45"
+            y="0"
+            text-anchor="middle"
+            dominant-baseline="middle"
+            font-size="10"
+            fill="#7f1d1d"
+            opacity="0.18"
+            style="letter-spacing: 2px;"
+          >
+            LEG SIDE
+          </text>
+
+          <!-- Group that will hold all fielder circles + labels -->
+          <g id="fieldersGroup"></g>
+        </svg>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="controls-section">
+        <h2>Global Settings</h2>
+        <div class="slider-row">
+          <span>Fielder size</span>
+          <input
+            type="range"
+            id="sizeSlider"
+            min="1"
+            max="5"
+            step="0.2"
+            value="2.5"
+          />
+        </div>
+        <div class="note">Size is in "meters" relative to the 75m radius field.</div>
+        <label class="mirror-toggle">
+          <input type="checkbox" id="mirrorToggle" />
+          Mirror field (swap off/leg side & fielder positions)
+        </label>
+      </div>
+
+      <div class="controls-section">
+        <h2>Fielder Controls</h2>
+        <div class="note">
+          Drag circles on the field. Edit label & color here.
+        </div>
+        <div class="fielder-list" id="fielderControls"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const svg = document.getElementById("fieldSvg");
+      const fieldersGroup = document.getElementById("fieldersGroup");
+      const fielderControls = document.getElementById("fielderControls");
+      const sizeSlider = document.getElementById("sizeSlider");
+      const mirrorToggle = document.getElementById("mirrorToggle");
+      const offLabel = document.getElementById("offLabel");
+      const legLabel = document.getElementById("legLabel");
+
+      const FIELD_RADIUS = 75; // meters
+      const FIELDER_COUNT = 11;
+
+      let fielderSize = parseFloat(sizeSlider.value); // "meters" in svg units
+      let isMirrored = false;
+      const fielders = [];
+      let activeFielder = null;
+
+      // Helper to convert pointer coords into SVG coords
+      const pt = svg.createSVGPoint();
+      function getSvgCoords(evt) {
+        pt.x = evt.clientX;
+        pt.y = evt.clientY;
+        const ctm = svg.getScreenCTM();
+        if (!ctm) return { x: 0, y: 0 };
+        const inv = ctm.inverse();
+        const svgP = pt.matrixTransform(inv);
+        return { x: svgP.x, y: svgP.y };
+      }
+
+      function clampToCircle(x, y, radiusLimit) {
+        const r = Math.sqrt(x * x + y * y);
+        if (r <= radiusLimit) return { x, y };
+        const scale = radiusLimit / r;
+        return { x: x * scale, y: y * scale };
+      }
+
+      function createInitialFielders() {
+        // Place 11 fielders roughly around a ring at ~40m
+        const ringRadius = 40;
+        for (let i = 0; i < FIELDER_COUNT; i++) {
+          const angle = (2 * Math.PI * i) / FIELDER_COUNT;
+          const logicalX = ringRadius * Math.cos(angle);
+          const logicalY = ringRadius * Math.sin(angle);
+
+          const circle = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "circle"
+          );
+          circle.setAttribute("r", fielderSize);
+          circle.setAttribute("stroke", "#222");
+          circle.setAttribute("stroke-width", "0.4");
+          circle.setAttribute("fill", "#1d4ed8");
+          circle.style.cursor = "grab";
+          circle.dataset.index = i.toString();
+
+          const label = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "text"
+          );
+          label.setAttribute("text-anchor", "middle");
+          label.setAttribute("dominant-baseline", "central");
+          label.setAttribute("font-size", (fielderSize * 1.6).toString());
+          label.setAttribute("fill", "#111");
+          label.style.pointerEvents = "none";
+
+          fieldersGroup.appendChild(circle);
+          fieldersGroup.appendChild(label);
+
+          const fielder = {
+            index: i,
+            logicalX,
+            logicalY,
+            color: "#1d4ed8",
+            name: "",
+            circleEl: circle,
+            labelEl: label,
+          };
+
+          fielders.push(fielder);
+        }
+
+        updateAllFielderVisuals();
+      }
+
+      function updateSideLabels() {
+        const offsetX = 45;
+        const y = 0;
+        if (!isMirrored) {
+          // OFF SIDE left, LEG SIDE right
+          offLabel.setAttribute("x", (-offsetX).toString());
+          offLabel.setAttribute("y", y.toString());
+          legLabel.setAttribute("x", offsetX.toString());
+          legLabel.setAttribute("y", y.toString());
+        } else {
+          // Flip positions
+          offLabel.setAttribute("x", offsetX.toString());
+          offLabel.setAttribute("y", y.toString());
+          legLabel.setAttribute("x", (-offsetX).toString());
+          legLabel.setAttribute("y", y.toString());
+        }
+      }
+
+      function updateFielderVisual(fielder) {
+        const displayX = isMirrored ? -fielder.logicalX : fielder.logicalX;
+        const displayY = fielder.logicalY;
+
+        fielder.circleEl.setAttribute("cx", displayX.toString());
+        fielder.circleEl.setAttribute("cy", displayY.toString());
+        fielder.circleEl.setAttribute("r", fielderSize.toString());
+        fielder.circleEl.setAttribute("fill", fielder.color);
+
+        const labelText =
+          fielder.name && fielder.name.trim().length > 0
+            ? fielder.name.trim()
+            : `F${fielder.index + 1}`;
+
+        fielder.labelEl.textContent = labelText;
+        fielder.labelEl.setAttribute("x", displayX.toString());
+        fielder.labelEl.setAttribute(
+          "y",
+          (displayY - (fielderSize + 1.2)).toString()
+        );
+        fielder.labelEl.setAttribute(
+          "font-size",
+          (fielderSize * 1.6).toString()
+        );
+      }
+
+      function updateAllFielderVisuals() {
+        fielders.forEach(updateFielderVisual);
+      }
+
+      function buildFielderControls() {
+        fielderControls.innerHTML = "";
+        fielders.forEach((fielder) => {
+          const row = document.createElement("div");
+          row.className = "fielder-row";
+
+          const header = document.createElement("div");
+          header.className = "fielder-row-header";
+          header.textContent = `Fielder ${fielder.index + 1}`;
+          row.appendChild(header);
+
+          // Label input
+          const labelWrapper = document.createElement("label");
+          labelWrapper.textContent = "Label";
+
+          const labelInput = document.createElement("input");
+          labelInput.type = "text";
+          labelInput.placeholder = `F${fielder.index + 1}`;
+          labelInput.value = fielder.name;
+          labelInput.dataset.index = fielder.index.toString();
+
+          labelWrapper.appendChild(labelInput);
+          row.appendChild(labelWrapper);
+
+          // Color input
+          const colorWrapper = document.createElement("label");
+          colorWrapper.textContent = "Color";
+
+          const colorInput = document.createElement("input");
+          colorInput.type = "color";
+          colorInput.value = fielder.color;
+          colorInput.dataset.index = fielder.index.toString();
+
+          colorWrapper.appendChild(colorInput);
+          row.appendChild(colorWrapper);
+
+          fielderControls.appendChild(row);
+
+          labelInput.addEventListener("input", (e) => {
+            const idx = parseInt(e.target.dataset.index, 10);
+            const f = fielders[idx];
+            f.name = e.target.value;
+            updateFielderVisual(f);
+          });
+
+          colorInput.addEventListener("input", (e) => {
+            const idx = parseInt(e.target.dataset.index, 10);
+            const f = fielders[idx];
+            f.color = e.target.value;
+            updateFielderVisual(f);
+          });
+        });
+      }
+
+      function handlePointerDown(evt) {
+        const target = evt.target;
+        if (!(target instanceof SVGCircleElement)) return;
+
+        const idx = parseInt(target.dataset.index || "-1", 10);
+        if (isNaN(idx) || idx < 0 || idx >= fielders.length) return;
+
+        activeFielder = fielders[idx];
+        target.style.cursor = "grabbing";
+        evt.preventDefault();
+      }
+
+      function handlePointerMove(evt) {
+        if (!activeFielder) return;
+
+        const { x, y } = getSvgCoords(evt);
+        // Clamp within field radius minus fielder size
+        const clamped = clampToCircle(x, y, FIELD_RADIUS - fielderSize * 0.8);
+        const displayX = clamped.x;
+        const displayY = clamped.y;
+
+        // Convert display coords back to logical coords
+        activeFielder.logicalX = isMirrored ? -displayX : displayX;
+        activeFielder.logicalY = displayY;
+
+        updateFielderVisual(activeFielder);
+      }
+
+      function handlePointerUp(evt) {
+        if (activeFielder && activeFielder.circleEl) {
+          activeFielder.circleEl.style.cursor = "grab";
+        }
+        activeFielder = null;
+      }
+
+      // Event wiring
+      svg.addEventListener("pointerdown", handlePointerDown);
+      svg.addEventListener("pointermove", handlePointerMove);
+      svg.addEventListener("pointerup", handlePointerUp);
+      svg.addEventListener("pointerleave", handlePointerUp);
+
+      sizeSlider.addEventListener("input", () => {
+        fielderSize = parseFloat(sizeSlider.value);
+        updateAllFielderVisuals();
+      });
+
+      mirrorToggle.addEventListener("change", () => {
+        isMirrored = mirrorToggle.checked;
+        updateSideLabels();
+        updateAllFielderVisuals();
+      });
+
+      // Init
+      createInitialFielders();
+      buildFielderControls();
+      updateSideLabels();
+    })();
+  </script>
+</body>
+</html>
