@@ -445,7 +445,7 @@
           <input type="range" id="boundaryOffset" min="-10" max="10" step="1" value="0" />
         </div>
 
-        <!-- NEW: change color of all fielders -->
+        <!-- All fielder color -->
         <div class="slider-row">
           <span>All fielder color</span>
           <input type="color" id="allFielderColor" value="#1d4ed8" />
@@ -460,15 +460,15 @@
           Hide all fielder labels
         </label>
 
-        <!-- 11 vs 9 fielders -->
+        <!-- 11 vs 9 fielders (default 9) -->
         <div class="small-row">
           <span style="font-size:0.8rem;">Number of fielders</span>
           <label>
-            <input type="radio" name="fielderCount" value="11" checked />
+            <input type="radio" name="fielderCount" value="11" />
             11
           </label>
           <label>
-            <input type="radio" name="fielderCount" value="9" />
+            <input type="radio" name="fielderCount" value="9" checked />
             9 (hide F10 &amp; F11)
           </label>
         </div>
@@ -528,7 +528,7 @@
       let isMirrored = false;
       let labelsHiddenAll = false;
       let fieldOffsetX = 0;
-      let fielderCountMode = 11; // 11 or 9
+      let fielderCountMode = 9; // default 9 fielders
 
       const fielders = [];
       let activeFielder = null;
@@ -614,6 +614,28 @@
             label,
           });
         }
+
+        // Override with preset positions for F1–F9 to match the example layout
+        const presetPositions = [
+          { i: 0, x: 60,  y: 0 },   // F1 - right side
+          { i: 1, x: 50,  y: 25 },  // F2 - deep midwicket-ish
+          { i: 2, x: 25,  y: 55 },  // F3 - long-on-ish
+          { i: 3, x: -20, y: 5 },   // F4 - mid-off-ish inside circle
+          { i: 4, x: 0,   y: 60 },  // F5 - straight long-on
+          { i: 5, x: -45, y: 35 },  // F6 - deep square / cow corner
+          { i: 6, x: -18, y: -10 }, // F7 - inner ring left
+          { i: 7, x: 0,   y: -20 }, // F8 - inner ring straight
+          { i: 8, x: 18,  y: -10 }, // F9 - inner ring right
+          // F10 (9) and F11 (10) stay on the default ring
+        ];
+
+        presetPositions.forEach(pos => {
+          const f = fielders[pos.i];
+          if (f) {
+            f.x = pos.x;
+            f.y = pos.y;
+          }
+        });
 
         updateAllFielders();
       }
