@@ -264,10 +264,7 @@
       <div class="field-card">
         <svg id="fieldSvg" viewBox="-75 -75 150 150">
           <defs>
-            <marker id="arrowHead" viewBox="0 0 10 10" refX="9" refY="5"
-                    markerWidth="4" markerHeight="4" orient="auto-start-reverse">
-              <path d="M 0 0 L 10 5 L 0 10 z" />
-            </marker>
+            <!-- we will create per-arrow markers in JS -->
           </defs>
 
           <!-- Outer field (68m radius) -->
@@ -377,6 +374,10 @@
 
         <button type="button" id="addArrowBtn">Add arrow</button>
         <div class="note">Drag arrow body to move; drag round ends to resize & rotate.</div>
+        <label class="small-row">
+          <input type="checkbox" id="hideArrowHandles" />
+          Hide arrow resize controls
+        </label>
         <div id="arrowList" class="arrow-list"></div>
 
         <h3 style="margin-top:8px;font-size:0.9rem;">Sector highlight</h3>
@@ -399,7 +400,10 @@
 
   <script>
     (function () {
+      const SVG_NS = "http://www.w3.org/2000/svg";
+
       const svg = document.getElementById("fieldSvg");
+      const defs = svg.querySelector("defs");
       const fieldersGroup = document.getElementById("fieldersGroup");
       const arrowsGroup = document.getElementById("arrowsGroup");
       const fielderControls = document.getElementById("fielderControls");
@@ -410,6 +414,7 @@
       const legLabel = document.getElementById("legLabel");
 
       const addArrowBtn = document.getElementById("addArrowBtn");
+      const hideArrowHandlesCheckbox = document.getElementById("hideArrowHandles");
       const arrowList = document.getElementById("arrowList");
 
       const sectorPath = document.getElementById("sectorHighlight");
@@ -467,10 +472,7 @@
           const logicalY = ring * Math.sin(angle);
 
           // Highlight ring
-          const ringCircle = document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "circle"
-          );
+          const ringCircle = document.createElementNS(SVG_NS, "circle");
           ringCircle.setAttribute("fill", "none");
           ringCircle.setAttribute("stroke", "#ef4444");
           ringCircle.setAttribute("stroke-width", "0.5");
@@ -478,10 +480,7 @@
           ringCircle.style.pointerEvents = "none";
 
           // Main fielder circle
-          const circle = document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "circle"
-          );
+          const circle = document.createElementNS(SVG_NS, "circle");
           circle.setAttribute("r", fielderSize.toString());
           circle.setAttribute("stroke", "#222");
           circle.setAttribute("stroke-width", "0.4");
@@ -490,10 +489,7 @@
           circle.classList.add("fielder-circle");
 
           // Label
-          const label = document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "text"
-          );
+          const label = document.createElementNS(SVG_NS, "text");
           label.setAttribute("text-anchor", "middle");
           label.setAttribute("dominant-baseline", "central");
           label.setAttribute("font-size", (fielderSize * 1.5).toString());
@@ -543,7 +539,7 @@
         f.label.setAttribute("x", displayX.toString());
         f.label.setAttribute(
           "y",
-          (displayY - (fielderSize + 2.0)).toString() // slightly more spacing
+          (displayY - (fielderSize + 2.0)).toString()
         );
         f.label.setAttribute(
           "font-size",
@@ -664,6 +660,11 @@
         arrow.lineEl.setAttribute("stroke-width", arrow.width.toString());
         arrow.lineEl.setAttribute("opacity", arrow.opacity.toString());
 
+        // Arrow head color
+        if (arrow.markerPathEl) {
+          arrow.markerPathEl.setAttribute("fill", arrow.color);
+        }
+
         // Handles match arrow color
         arrow.handleStartEl.setAttribute("stroke", arrow.color);
         arrow.handleEndEl.setAttribute("stroke", arrow.color);
@@ -674,6 +675,14 @@
         arrow.handleStartEl.setAttribute("cy", arrow.y1.toString());
         arrow.handleEndEl.setAttribute("cx", arrow.x2.toString());
         arrow.handleEndEl.setAttribute("cy", arrow.y2.toString());
+      }
+
+      function updateHandlesVisibilityGlobal() {
+        const hide = hideArrowHandlesCheckbox.checked;
+        arrows.forEach((arrow) => {
+          arrow.handleStartEl.style.display = hide ? "none" : "block";
+          arrow.handleEndEl.style.display = hide ? "none" : "block";
+        });
       }
 
       function rebuildArrowList() {
@@ -733,11 +742,12 @@
           });
 
           deleteBtn.addEventListener("click", () => {
-            // Remove from DOM
             arrowsGroup.removeChild(arrow.lineEl);
             arrowsGroup.removeChild(arrow.handleStartEl);
             arrowsGroup.removeChild(arrow.handleEndEl);
-            // Remove from array
+            if (arrow.markerEl && defs.contains(arrow.markerEl)) {
+              defs.removeChild(arrow.markerEl);
+            }
             const idxInArr = arrows.findIndex((a) => a.id === arrow.id);
             if (idxInArr >= 0) arrows.splice(idxInArr, 1);
             rebuildArrowList();
@@ -747,45 +757,53 @@
 
       function createArrow() {
         const id = nextArrowId++;
-        // Default arrow roughly across the pitch horizontally
         const x1 = -10;
         const y1 = 0;
         const x2 = 10;
         const y2 = 0;
+        const baseColor = "#b91c1c";
 
-        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        const line = document.createElementNS(SVG_NS, "line");
         line.classList.add("arrow-line");
         line.dataset.id = id.toString();
         line.setAttribute("x1", x1.toString());
         line.setAttribute("y1", y1.toString());
         line.setAttribute("x2", x2.toString());
         line.setAttribute("y2", y2.toString());
-        line.setAttribute("stroke", "#b91c1c");
+        line.setAttribute("stroke", baseColor);
         line.setAttribute("stroke-width", "1.2");
         line.setAttribute("opacity", "0.85");
-        line.setAttribute("marker-end", "url(#arrowHead)");
 
-        const handleStart = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "circle"
-        );
+        // per-arrow marker
+        const markerId = "arrowHead-" + id;
+        const marker = document.createElementNS(SVG_NS, "marker");
+        marker.setAttribute("id", markerId);
+        marker.setAttribute("viewBox", "0 0 10 10");
+        marker.setAttribute("refX", "9");
+        marker.setAttribute("refY", "5");
+        marker.setAttribute("markerWidth", "4");
+        marker.setAttribute("markerHeight", "4");
+        marker.setAttribute("orient", "auto-start-reverse");
+
+        const markerPath = document.createElementNS(SVG_NS, "path");
+        markerPath.setAttribute("d", "M 0 0 L 10 5 L 0 10 z");
+        markerPath.setAttribute("fill", baseColor);
+        marker.appendChild(markerPath);
+        defs.appendChild(marker);
+
+        line.setAttribute("marker-end", "url(#" + markerId + ")");
+
+        const handleStart = document.createElementNS(SVG_NS, "circle");
         handleStart.classList.add("arrow-handle");
         handleStart.dataset.id = id.toString();
         handleStart.dataset.handle = "start";
         handleStart.setAttribute("r", "1.4");
 
-        const handleEnd = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "circle"
-        );
+        const handleEnd = document.createElementNS(SVG_NS, "circle");
         handleEnd.classList.add("arrow-handle");
         handleEnd.dataset.id = id.toString();
         handleEnd.dataset.handle = "end";
         handleEnd.setAttribute("r", "1.4");
-
-        // Handles hidden by default
-        handleStart.style.display = "none";
-        handleEnd.style.display = "none";
 
         arrowsGroup.appendChild(line);
         arrowsGroup.appendChild(handleStart);
@@ -797,16 +815,19 @@
           y1,
           x2,
           y2,
-          color: "#b91c1c",
+          color: baseColor,
           width: 1.2,
           opacity: 0.85,
           lineEl: line,
           handleStartEl: handleStart,
           handleEndEl: handleEnd,
+          markerEl: marker,
+          markerPathEl: markerPath,
         };
         arrows.push(arrow);
         updateArrowVisual(arrow);
         rebuildArrowList();
+        updateHandlesVisibilityGlobal();
       }
 
       function arrowPointerDown(evt, target) {
@@ -824,10 +845,6 @@
 
         prevArrowPointer = getSvgCoords(evt);
         evt.preventDefault();
-
-        // Show handles while interacting
-        arrow.handleStartEl.style.display = "block";
-        arrow.handleEndEl.style.display = "block";
       }
 
       function arrowPointerMove(evt) {
@@ -915,6 +932,15 @@
       function handlePointerDown(evt) {
         const target = evt.target;
 
+        // Arrow interaction
+        if (
+          target.classList.contains("arrow-line") ||
+          target.classList.contains("arrow-handle")
+        ) {
+          arrowPointerDown(evt, target);
+          return;
+        }
+
         // Fielder dragging
         if (target.classList.contains("fielder-circle")) {
           const idx = parseInt(target.dataset.index || "-1", 10);
@@ -923,15 +949,6 @@
             target.style.cursor = "grabbing";
             evt.preventDefault();
           }
-          return;
-        }
-
-        // Arrow interaction
-        if (
-          target.classList.contains("arrow-line") ||
-          target.classList.contains("arrow-handle")
-        ) {
-          arrowPointerDown(evt, target);
           return;
         }
       }
@@ -964,16 +981,9 @@
         }
         activeFielder = null;
 
-        // Hide handles for the arrow we were manipulating
-        const arrowToHide = activeArrow;
         activeArrow = null;
         arrowDragMode = null;
         prevArrowPointer = null;
-
-        if (arrowToHide) {
-          arrowToHide.handleStartEl.style.display = "none";
-          arrowToHide.handleEndEl.style.display = "none";
-        }
       }
 
       // EVENTS -------------------------------------------------------------------
@@ -1000,6 +1010,10 @@
 
       addArrowBtn.addEventListener("click", () => {
         createArrow();
+      });
+
+      hideArrowHandlesCheckbox.addEventListener("change", () => {
+        updateHandlesVisibilityGlobal();
       });
 
       sectorEnabledCheckbox.addEventListener("change", () => {
