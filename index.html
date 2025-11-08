@@ -249,6 +249,13 @@
     .fielder-circle {
       cursor: grab;
     }
+
+    .wind-dir-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 0.8rem;
+    }
   </style>
 </head>
 <body>
@@ -342,21 +349,22 @@
               font-size="4"
               fill="#000000"
             >WIND</text>
-            <!-- arrows centered around (0,0); we position + rotate via transform -->
-            <g id="windArrowGroup">
-              <!-- upper arrow -->
-              <line x1="-8" y1="-4" x2="8" y2="-4"
+            <!-- arrows centered around (0,0); positioned & rotated via transform -->
+            <g id="windArrowGroup" transform="translate(60,-60)">
+              <!-- upper arrow (thin, shorter, proper head at tip) -->
+              <line x1="-6" y1="-1.5" x2="6" y2="-1.5"
                     stroke="#2563eb"
-                    stroke-width="1.1"
+                    stroke-width="0.8"
                     stroke-linecap="round"></line>
-              <polygon points="8,-4 4,-6 4,-2"
+              <polygon points="6,-1.5 3,-3 3,0"
                        fill="#2563eb"></polygon>
-              <!-- lower arrow, spaced further down -->
-              <line x1="-8" y1="4" x2="8" y2="4"
+
+              <!-- lower arrow, closer (less spacing) -->
+              <line x1="-6" y1="1.5" x2="6" y2="1.5"
                     stroke="#2563eb"
-                    stroke-width="1.1"
+                    stroke-width="0.8"
                     stroke-linecap="round"></line>
-              <polygon points="8,4 4,2 4,6"
+              <polygon points="6,1.5 3,0 3,3"
                        fill="#2563eb"></polygon>
             </g>
           </g>
@@ -434,11 +442,17 @@
           <input type="checkbox" id="windVisible" checked />
           Show wind legend
         </label>
-        <div class="slider-row">
-          <span>Wind direction</span>
-          <input type="range" id="windDirection" min="0" max="360" step="15" value="0" />
+        <div class="small-row" style="gap:10px;">
+          <span style="font-size:0.8rem;">Wind direction</span>
+          <label class="wind-dir-label">
+            <input type="radio" name="windDir" value="right" checked />
+            → right
+          </label>
+          <label class="wind-dir-label">
+            <input type="radio" name="windDir" value="left" />
+            ← left
+          </label>
         </div>
-        <div class="note">0° = blowing to the right, 90° = up, 180° = left, 270° = down.</div>
       </div>
     </div>
   </div>
@@ -475,7 +489,7 @@
       const windLegend = document.getElementById("windLegend");
       const windArrowGroup = document.getElementById("windArrowGroup");
       const windVisibleCheckbox = document.getElementById("windVisible");
-      const windDirectionInput = document.getElementById("windDirection");
+      const windDirectionInputs = document.querySelectorAll('input[name="windDir"]');
 
       const FIELD_RADIUS = 68;
       const FIELDER_COUNT = 11;
@@ -501,6 +515,9 @@
       let sectorEnabled = false;
       let sectorStartDeg = parseFloat(sectorStartInput.value) || 0;
       let sectorEndDeg = parseFloat(sectorEndInput.value) || 0;
+
+      // Wind
+      let windDirection = "right"; // "right" or "left"
 
       function getSvgCoords(evt) {
         pt.x = evt.clientX;
@@ -989,8 +1006,8 @@
       }
 
       function updateWindDirection() {
-        const angle = parseFloat(windDirectionInput.value) || 0;
-        // rotate around the arrow's own center, then place at (60,-60)
+        const angle = windDirection === "right" ? 0 : 180;
+        // rotate around its own center (0,0 in local coords), then translated to top-right
         windArrowGroup.setAttribute(
           "transform",
           "translate(60,-60) rotate(" + angle + ")"
@@ -1104,8 +1121,13 @@
         updateWindVisibility();
       });
 
-      windDirectionInput.addEventListener("input", () => {
-        updateWindDirection();
+      windDirectionInputs.forEach((input) => {
+        input.addEventListener("change", (e) => {
+          if (e.target.checked) {
+            windDirection = e.target.value;
+            updateWindDirection();
+          }
+        });
       });
 
       // INIT ---------------------------------------------------------------------
