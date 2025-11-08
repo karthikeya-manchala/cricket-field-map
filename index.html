@@ -263,6 +263,54 @@
   <div class="subtitle">Drag fielders, add arrows, highlight sectors & mirror for different batters.</div>
 
   <div class="layout">
+    <!-- LEFT: Arrows, sector, wind -->
+    <div class="controls controls-left">
+      <div class="controls-section">
+        <h2>Arrows & Field Highlight</h2>
+
+        <button type="button" id="addArrowBtn">Add arrow</button>
+        <div class="note">Drag arrow body to move; drag round ends to resize & rotate.</div>
+        <label class="small-row">
+          <input type="checkbox" id="hideArrowHandles" />
+          Hide arrow resize controls
+        </label>
+        <div id="arrowList" class="arrow-list"></div>
+
+        <h3 style="margin-top:8px;font-size:0.9rem;">Sector highlight</h3>
+        <label class="small-row">
+          <input type="checkbox" id="sectorEnabled" />
+          Enable sector (translucent yellow wedge)
+        </label>
+        <div class="slider-row">
+          <span>Start angle</span>
+          <input type="range" id="sectorStart" min="0" max="360" step="5" value="300" />
+        </div>
+        <div class="slider-row">
+          <span>End angle</span>
+          <input type="range" id="sectorEnd" min="0" max="360" step="5" value="40" />
+        </div>
+        <div class="note">Angles are from center, in degrees, around the full circle.</div>
+
+        <h3 style="margin-top:8px;font-size:0.9rem;">Wind</h3>
+        <label class="small-row">
+          <input type="checkbox" id="windVisible" checked />
+          Show wind legend
+        </label>
+        <div class="small-row" style="gap:10px;">
+          <span style="font-size:0.8rem;">Wind direction</span>
+          <label class="wind-dir-label">
+            <input type="radio" name="windDir" value="right" checked />
+            → right
+          </label>
+          <label class="wind-dir-label">
+            <input type="radio" name="windDir" value="left" />
+            ← left
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER: Field -->
     <div class="field-wrapper">
       <div class="field-card">
         <!-- widened viewBox so shifted boundary never clips -->
@@ -378,7 +426,8 @@
       </div>
     </div>
 
-    <div class="controls">
+    <!-- RIGHT: Global & Fielder controls -->
+    <div class="controls controls-right">
       <!-- Global settings -->
       <div class="controls-section">
         <h2>Global Settings</h2>
@@ -396,6 +445,12 @@
           <input type="range" id="boundaryOffset" min="-10" max="10" step="1" value="0" />
         </div>
 
+        <!-- NEW: change color of all fielders -->
+        <div class="slider-row">
+          <span>All fielder color</span>
+          <input type="color" id="allFielderColor" value="#1d4ed8" />
+        </div>
+
         <label class="mirror-toggle">
           <input type="checkbox" id="mirrorToggle" />
           Mirror field (off/leg & fielders)
@@ -405,7 +460,7 @@
           Hide all fielder labels
         </label>
 
-        <!-- New: fielder count radio buttons -->
+        <!-- 11 vs 9 fielders -->
         <div class="small-row">
           <span style="font-size:0.8rem;">Number of fielders</span>
           <label>
@@ -424,51 +479,6 @@
         <h2>Fielder Controls</h2>
         <div class="note">Drag circles on the field. Edit label, color, highlight & visibility here.</div>
         <div class="fielder-list" id="fielderControls"></div>
-      </div>
-
-      <!-- Arrows & sector highlight -->
-      <div class="controls-section">
-        <h2>Arrows & Field Highlight</h2>
-
-        <button type="button" id="addArrowBtn">Add arrow</button>
-        <div class="note">Drag arrow body to move; drag round ends to resize & rotate.</div>
-        <label class="small-row">
-          <input type="checkbox" id="hideArrowHandles" />
-          Hide arrow resize controls
-        </label>
-        <div id="arrowList" class="arrow-list"></div>
-
-        <h3 style="margin-top:8px;font-size:0.9rem;">Sector highlight</h3>
-        <label class="small-row">
-          <input type="checkbox" id="sectorEnabled" />
-          Enable sector (translucent yellow wedge)
-        </label>
-        <div class="slider-row">
-          <span>Start angle</span>
-          <input type="range" id="sectorStart" min="0" max="360" step="5" value="300" />
-        </div>
-        <div class="slider-row">
-          <span>End angle</span>
-          <input type="range" id="sectorEnd" min="0" max="360" step="5" value="40" />
-        </div>
-        <div class="note">Angles are from center, in degrees, around the full circle.</div>
-
-        <h3 style="margin-top:8px;font-size:0.9rem;">Wind</h3>
-        <label class="small-row">
-          <input type="checkbox" id="windVisible" checked />
-          Show wind legend
-        </label>
-        <div class="small-row" style="gap:10px;">
-          <span style="font-size:0.8rem;">Wind direction</span>
-          <label class="wind-dir-label">
-            <input type="radio" name="windDir" value="right" checked />
-            → right
-          </label>
-          <label class="wind-dir-label">
-            <input type="radio" name="windDir" value="left" />
-            ← left
-          </label>
-        </div>
       </div>
     </div>
   </div>
@@ -489,6 +499,7 @@
       const sizeSlider = document.getElementById("sizeSlider");
       const boundaryOffsetInput = document.getElementById("boundaryOffset");
       const boundaryOffsetValue = document.getElementById("boundaryOffsetValue");
+      const allFielderColorInput = document.getElementById("allFielderColor");
       const mirrorToggle = document.getElementById("mirrorToggle");
       const hideAllLabels = document.getElementById("hideAllLabels");
       const offLabel = document.getElementById("offLabel");
@@ -1122,6 +1133,14 @@
         updateFieldOffset();
       });
 
+      allFielderColorInput.addEventListener("input", () => {
+        const col = allFielderColorInput.value;
+        fielders.forEach((f) => {
+          f.color = col;
+        });
+        updateAllFielders();
+      });
+
       mirrorToggle.addEventListener("change", () => {
         isMirrored = mirrorToggle.checked;
         updateSideLabels();
@@ -1169,7 +1188,7 @@
         });
       });
 
-      // New: fielder count radio events
+      // Fielder count radio events
       fielderCountInputs.forEach((input) => {
         input.addEventListener("change", (e) => {
           if (e.target.checked) {
