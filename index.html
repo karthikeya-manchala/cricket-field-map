@@ -7,7 +7,7 @@
   <style>
     :root {
       --field-radius-m: 68;
-      --inner-circle-m: 27.432; /* 30 yards */
+      --inner-radius-m: 27.432; /* 30 yards ≈ 27.432 m */
     }
 
     * { box-sizing: border-box; }
@@ -313,26 +313,16 @@
     <!-- CENTER: Field -->
     <div class="field-wrapper">
       <div class="field-card">
-        <!-- widened viewBox so shifted boundary never clips -->
         <svg id="fieldSvg" viewBox="-80 -80 160 160">
           <defs>
             <!-- Gradient for field (lighter center, darker edge) -->
             <radialGradient id="fieldGradient" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="68">
-              <stop offset="0%" stop-color="#cfecc3" />
-              <stop offset="55%" stop-color="#bfe4b1" />
+              <stop offset="0%"   stop-color="#cfecc3" />
+              <stop offset="55%"  stop-color="#bfe4b1" />
               <stop offset="100%" stop-color="#9ccd93" />
             </radialGradient>
             <!-- per-arrow markers will be inserted here from JS -->
           </defs>
-
-          <!-- Soft shadow under field for slight 3D lift -->
-          <ellipse
-            id="fieldShadow"
-            cx="0" cy="6"
-            rx="72" ry="10"
-            fill="rgba(0,0,0,0.16)"
-            style="pointer-events:none;"
-          ></ellipse>
 
           <!-- Outer field (68m radius) -->
           <circle
@@ -351,15 +341,23 @@
             stroke-width="1.1"
           ></circle>
 
-          <!-- Inner 30-yard circle (stays centered) -->
-          <circle
-            id="innerCircle"
-            cx="0" cy="0" r="27.432"
+          <!-- 30-yard oval:
+               Two semicircles (radius 27.432) centered on each wicket at (0,-10) and (0,10),
+               connected by straight lines parallel to the pitch. -->
+          <path
+            id="innerOval"
+            d="
+              M 27.432 -10
+              A 27.432 27.432 0 0 0 -27.432 -10
+              L -27.432 10
+              A 27.432 27.432 0 0 0 27.432 10
+              Z
+            "
             fill="none"
             stroke="#0b6820"
             stroke-dasharray="1.2 1.2"
             stroke-width="0.5"
-          ></circle>
+          ></path>
 
           <!-- Pitch -->
           <rect
@@ -412,9 +410,7 @@
               font-size="4"
               fill="#000000"
             >Wind</text>
-            <!-- arrows centered around (0,0); positioned & rotated via transform -->
             <g id="windArrowGroup" transform="translate(60,-60)">
-              <!-- upper arrow (thin, shorter, proper head at tip) -->
               <line x1="-6" y1="-1.5" x2="6" y2="-1.5"
                     stroke="#2563eb"
                     stroke-width="0.8"
@@ -422,7 +418,6 @@
               <polygon points="7,-1.5 4,-3 4,0"
                        fill="#2563eb"></polygon>
 
-              <!-- lower arrow, closer (less spacing) -->
               <line x1="-6" y1="1.5" x2="6" y2="1.5"
                     stroke="#2563eb"
                     stroke-width="0.8"
@@ -443,7 +438,6 @@
 
     <!-- RIGHT: Global & Fielder controls -->
     <div class="controls controls-right">
-      <!-- Global settings -->
       <div class="controls-section">
         <h2>Global Settings</h2>
 
@@ -460,7 +454,6 @@
           <input type="range" id="boundaryOffset" min="-10" max="10" step="1" value="0" />
         </div>
 
-        <!-- All fielder color -->
         <div class="slider-row">
           <span>All fielder color</span>
           <input type="color" id="allFielderColor" value="#1d4ed8" />
@@ -475,7 +468,6 @@
           Hide all fielder labels
         </label>
 
-        <!-- 11 vs 9 fielders (default 9) -->
         <div class="small-row">
           <span style="font-size:0.8rem;">Number of fielders</span>
           <label>
@@ -489,7 +481,6 @@
         </div>
       </div>
 
-      <!-- Fielder controls -->
       <div class="controls-section">
         <h2>Fielder Controls</h2>
         <div class="note">Drag circles on the field. Edit label, color, highlight & visibility here.</div>
@@ -506,7 +497,6 @@
       const defs = svg.querySelector("defs");
       const outerFieldCircle = document.getElementById("outerField");
       const outerBorderCircle = document.getElementById("outerBorder");
-      const innerCircle = document.getElementById("innerCircle");
 
       const fieldersGroup = document.getElementById("fieldersGroup");
       const arrowsGroup = document.getElementById("arrowsGroup");
@@ -543,27 +533,24 @@
       let isMirrored = false;
       let labelsHiddenAll = false;
       let fieldOffsetX = 0;
-      let fielderCountMode = 9; // default 9 fielders
+      let fielderCountMode = 9; // default 9
 
       const fielders = [];
       let activeFielder = null;
 
       const pt = svg.createSVGPoint();
 
-      // Arrows
       const arrows = [];
       let nextArrowId = 1;
       let activeArrow = null;
-      let arrowDragMode = null; // "move" | "start" | "end"
+      let arrowDragMode = null;
       let prevArrowPointer = null;
 
-      // Sector
       let sectorEnabled = false;
       let sectorStartDeg = parseFloat(sectorStartInput.value) || 0;
       let sectorEndDeg = parseFloat(sectorEndInput.value) || 0;
 
-      // Wind
-      let windDirection = "right"; // "right" or "left"
+      let windDirection = "right";
 
       function getSvgCoords(evt) {
         pt.x = evt.clientX;
@@ -630,7 +617,7 @@
           });
         }
 
-        // Preset positions for F1–F9 (roughly matching your example)
+        // Preset F1–F9 positions (roughly matching your example)
         const presetPositions = [
           { i: 0, x: 60,  y: 0  },  // F1
           { i: 1, x: 50,  y: 25 },  // F2
@@ -641,7 +628,6 @@
           { i: 6, x: -18, y: -10},  // F7
           { i: 7, x: 0,   y: -20},  // F8
           { i: 8, x: 18,  y: -10},  // F9
-          // F10 (9) and F11 (10) remain on default ring
         ];
 
         presetPositions.forEach(pos => {
@@ -664,8 +650,7 @@
 
       function isFielderActive(f) {
         if (fielderCountMode === 11) return true;
-        // 9-fielder mode: hide F10 & F11 (indices 9 and 10)
-        return f.i !== 9 && f.i !== 10;
+        return f.i !== 9 && f.i !== 10; // hide F10 & F11
       }
 
       function updateFielderVisual(f) {
@@ -799,10 +784,9 @@
         fieldOffsetX = parseFloat(boundaryOffsetInput.value) || 0;
         outerFieldCircle.setAttribute("cx", fieldOffsetX.toString());
         outerBorderCircle.setAttribute("cx", fieldOffsetX.toString());
-        // innerCircle stays centered
-        updateSectorPath();
-
+        // 30-yard oval stays centered on the pitch, by design
         boundaryOffsetValue.textContent = fieldOffsetX.toString();
+        updateSectorPath();
       }
 
       // ARROWS -------------------------------------------------------------------
@@ -1085,7 +1069,7 @@
         sectorPath.setAttribute("d", d);
       }
 
-      // WIND LEGEND --------------------------------------------------------------
+      // WIND ---------------------------------------------------------------------
       function updateWindVisibility() {
         windLegend.style.display = windVisibleCheckbox.checked ? "block" : "none";
       }
@@ -1222,7 +1206,6 @@
         });
       });
 
-      // Fielder count radio events
       fielderCountInputs.forEach((input) => {
         input.addEventListener("change", (e) => {
           if (e.target.checked) {
