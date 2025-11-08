@@ -475,6 +475,7 @@
       const fielderControls = document.getElementById("fielderControls");
       const sizeSlider = document.getElementById("sizeSlider");
       const boundaryOffsetInput = document.getElementById("boundaryOffset");
+      const boundaryOffsetValue = document.getElementById("boundaryOffsetValue");
       const mirrorToggle = document.getElementById("mirrorToggle");
       const hideAllLabels = document.getElementById("hideAllLabels");
       const offLabel = document.getElementById("offLabel");
@@ -721,6 +722,9 @@
         outerBorderCircle.setAttribute("cx", fieldOffsetX.toString());
         // innerCircle stays centered
         updateSectorPath();
+      
+        // NEW: update the numeric display
+        boundaryOffsetValue.textContent = fieldOffsetX.toString();
       }
 
       // ARROWS -------------------------------------------------------------------
