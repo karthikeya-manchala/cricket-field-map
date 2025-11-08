@@ -445,7 +445,7 @@
           <input type="range" id="boundaryOffset" min="-10" max="10" step="1" value="0" />
         </div>
 
-        <!-- NEW: change color of all fielders -->
+        <!-- All fielder color -->
         <div class="slider-row">
           <span>All fielder color</span>
           <input type="color" id="allFielderColor" value="#1d4ed8" />
@@ -460,11 +460,11 @@
           Hide all fielder labels
         </label>
 
-        <!-- 11 vs 9 fielders -->
+        <!-- 11 vs 9 fielders (default 9) -->
         <div class="small-row">
           <span style="font-size:0.8rem;">Number of fielders</span>
           <label>
-            <input type="radio" name="fielderCount" value="11"/>
+            <input type="radio" name="fielderCount" value="11" />
             11
           </label>
           <label>
@@ -528,7 +528,7 @@
       let isMirrored = false;
       let labelsHiddenAll = false;
       let fieldOffsetX = 0;
-      let fielderCountMode = 11; // 11 or 9
+      let fielderCountMode = 9; // default 9 fielders
 
       const fielders = [];
       let activeFielder = null;
@@ -614,6 +614,28 @@
             label,
           });
         }
+
+        // Override with preset positions for F1–F9 to match the example layout
+        const presetPositions = [
+          { i: 0, x: 12,  y: -20 },   // F1 - short fine
+          { i: 1, x: -32,  y: -54 },  // F2 - deep third
+          { i: 2, x: -19,  y: -11 },  // F3 - backward point
+          { i: 3, x: -24, y: 0 },   // F4 - point
+          { i: 4, x: -20,   y: 13 },  // F5 - cover
+          { i: 5, x: -19, y: 59 },  // F6 - long off
+          { i: 6, x: -30, y: -56 }, // F7 - long on
+          { i: 7, x: 59,   y: -24 }, // F8 - deep midwicket
+          { i: 8, x: 61,  y: -16 }, // F9 - deep backward square
+          // F10 (9) and F11 (10) stay on the default ring
+        ];
+
+        presetPositions.forEach(pos => {
+          const f = fielders[pos.i];
+          if (f) {
+            f.x = pos.x;
+            f.y = pos.y;
+          }
+        });
 
         updateAllFielders();
       }
