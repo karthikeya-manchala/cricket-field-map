@@ -246,9 +246,7 @@
     }
 
     .arrow-handle {
-      stroke: #111;
       stroke-width: 0.3;
-      fill: #ffffff;
       cursor: pointer;
     }
 
@@ -275,16 +273,17 @@
           <!-- Outer field (68m radius) -->
           <circle
             cx="0" cy="0" r="68"
-            fill="#b7e0ab"  <!-- slightly darker green -->
+            fill="#b7e0ab"
             stroke="#0b6820" stroke-width="0.7"
           ></circle>
 
+          <!-- Outer border -->
           <circle
             cx="0" cy="0" r="68"
             fill="none"
             stroke="#1b4d1a"
             stroke-width="1"
-            />
+          ></circle>
 
           <!-- Inner 30-yard circle -->
           <circle
@@ -662,10 +661,14 @@
         arrow.lineEl.setAttribute("x2", arrow.x2.toString());
         arrow.lineEl.setAttribute("y2", arrow.y2.toString());
         arrow.lineEl.setAttribute("stroke", arrow.color);
-        arrow.handleStartEl.setAttribute("stroke", arrow.color);
-        arrow.handleEndEl.setAttribute("stroke", arrow.color);
         arrow.lineEl.setAttribute("stroke-width", arrow.width.toString());
         arrow.lineEl.setAttribute("opacity", arrow.opacity.toString());
+
+        // Handles match arrow color
+        arrow.handleStartEl.setAttribute("stroke", arrow.color);
+        arrow.handleEndEl.setAttribute("stroke", arrow.color);
+        arrow.handleStartEl.setAttribute("fill", arrow.color);
+        arrow.handleEndEl.setAttribute("fill", arrow.color);
 
         arrow.handleStartEl.setAttribute("cx", arrow.x1.toString());
         arrow.handleStartEl.setAttribute("cy", arrow.y1.toString());
@@ -770,8 +773,6 @@
         handleStart.dataset.id = id.toString();
         handleStart.dataset.handle = "start";
         handleStart.setAttribute("r", "1.4");
-        handleStart.style.display = "none";
-        handleEnd.style.display = "none";
 
         const handleEnd = document.createElementNS(
           "http://www.w3.org/2000/svg",
@@ -781,6 +782,10 @@
         handleEnd.dataset.id = id.toString();
         handleEnd.dataset.handle = "end";
         handleEnd.setAttribute("r", "1.4");
+
+        // Handles hidden by default
+        handleStart.style.display = "none";
+        handleEnd.style.display = "none";
 
         arrowsGroup.appendChild(line);
         arrowsGroup.appendChild(handleStart);
@@ -819,6 +824,8 @@
 
         prevArrowPointer = getSvgCoords(evt);
         evt.preventDefault();
+
+        // Show handles while interacting
         arrow.handleStartEl.style.display = "block";
         arrow.handleEndEl.style.display = "block";
       }
@@ -957,13 +964,16 @@
         }
         activeFielder = null;
 
+        // Hide handles for the arrow we were manipulating
+        const arrowToHide = activeArrow;
         activeArrow = null;
         arrowDragMode = null;
         prevArrowPointer = null;
-        if (activeArrow) {
-          activeArrow.handleStartEl.style.display = "none";
-          activeArrow.handleEndEl.style.display = "none";
-          }
+
+        if (arrowToHide) {
+          arrowToHide.handleStartEl.style.display = "none";
+          arrowToHide.handleEndEl.style.display = "none";
+        }
       }
 
       // EVENTS -------------------------------------------------------------------
