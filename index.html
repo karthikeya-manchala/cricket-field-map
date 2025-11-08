@@ -184,7 +184,6 @@
       margin-left: 6px;
     }
 
-    /* Arrows & highlight controls */
     button {
       font-family: inherit;
       font-size: 0.8rem;
@@ -238,7 +237,6 @@
       flex: 1;
     }
 
-    /* SVG arrow styling */
     .arrow-line {
       cursor: pointer;
     }
@@ -260,7 +258,8 @@
   <div class="layout">
     <div class="field-wrapper">
       <div class="field-card">
-        <svg id="fieldSvg" viewBox="-75 -75 150 150">
+        <!-- widened viewBox so shifted boundary never clips -->
+        <svg id="fieldSvg" viewBox="-80 -80 160 160">
           <defs>
             <!-- per-arrow markers will be inserted here from JS -->
           </defs>
@@ -292,7 +291,7 @@
             stroke-width="0.5"
           ></circle>
 
-          <!-- Pitch (stays at center / wicket) -->
+          <!-- Pitch -->
           <rect
             x="-2.5" y="-10" width="5" height="20"
             rx="1.5" ry="1.5"
@@ -305,7 +304,7 @@
           <rect x="-0.6" y="-10.5" width="1.2" height="1.3" fill="#444"></rect>
           <rect x="-0.6" y="9.2"   width="1.2" height="1.3" fill="#444"></rect>
 
-          <!-- Side labels (slightly smaller now) -->
+          <!-- Side labels -->
           <text
             id="offLabel"
             x="-40" y="0"
@@ -338,25 +337,26 @@
           <g id="windLegend">
             <text
               id="windLabel"
-              x="60" y="-68"
+              x="60" y="-70"
               text-anchor="middle"
               font-size="4"
               fill="#000000"
             >WIND</text>
-            <g id="windArrowGroup" transform="translate(60,-60)">
-              <!-- two small straight arrows -->
-              <line x1="-8" y1="-1" x2="8" y2="-1"
+            <!-- arrows centered around (0,0); we position + rotate via transform -->
+            <g id="windArrowGroup">
+              <!-- upper arrow -->
+              <line x1="-8" y1="-4" x2="8" y2="-4"
                     stroke="#2563eb"
                     stroke-width="1.1"
                     stroke-linecap="round"></line>
-              <polygon points="8,-1 4,-3 4,1"
+              <polygon points="8,-4 4,-6 4,-2"
                        fill="#2563eb"></polygon>
-
-              <line x1="-8" y1="2" x2="8" y2="2"
+              <!-- lower arrow, spaced further down -->
+              <line x1="-8" y1="4" x2="8" y2="4"
                     stroke="#2563eb"
                     stroke-width="1.1"
                     stroke-linecap="round"></line>
-              <polygon points="8,2 4,0 4,4"
+              <polygon points="8,4 4,2 4,6"
                        fill="#2563eb"></polygon>
             </g>
           </g>
@@ -383,9 +383,6 @@
         <div class="slider-row">
           <span>Boundary offset (m)</span>
           <input type="range" id="boundaryOffset" min="-10" max="10" step="1" value="0" />
-        </div>
-        <div class="note">
-          Use about ±7m to simulate a short boundary on one side.
         </div>
 
         <label class="mirror-toggle">
@@ -486,7 +483,7 @@
       let fielderSize = parseFloat(sizeSlider.value);
       let isMirrored = false;
       let labelsHiddenAll = false;
-      let fieldOffsetX = 0; // meters (SVG units)
+      let fieldOffsetX = 0;
 
       const fielders = [];
       let activeFielder = null;
@@ -524,7 +521,7 @@
 
       // FIELDERS -----------------------------------------------------------------
       function createInitialFielders() {
-        const ring = 35; // radius for initial ring
+        const ring = 35;
         for (let i = 0; i < FIELDER_COUNT; i++) {
           const angle = (2 * Math.PI * i) / FIELDER_COUNT;
           const logicalX = ring * Math.cos(angle);
@@ -702,7 +699,7 @@
         fieldOffsetX = parseFloat(boundaryOffsetInput.value) || 0;
         outerFieldCircle.setAttribute("cx", fieldOffsetX.toString());
         outerBorderCircle.setAttribute("cx", fieldOffsetX.toString());
-        // innerCircle stays at cx = 0 on purpose
+        // innerCircle stays centered
         updateSectorPath();
       }
 
@@ -967,7 +964,7 @@
         const sweepFlag = 1;
 
         const R = FIELD_RADIUS;
-        const CX = fieldOffsetX; // center of outer boundary
+        const CX = fieldOffsetX;
         const startRad = degToRad(start);
         const endRad = degToRad(end);
 
@@ -993,10 +990,10 @@
 
       function updateWindDirection() {
         const angle = parseFloat(windDirectionInput.value) || 0;
-        // rotate arrows around their local origin (0,0), then position at (60,-60)
+        // rotate around the arrow's own center, then place at (60,-60)
         windArrowGroup.setAttribute(
           "transform",
-          "rotate(" + angle + ") translate(60,-60)"
+          "translate(60,-60) rotate(" + angle + ")"
         );
       }
 
