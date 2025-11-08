@@ -404,6 +404,19 @@
           <input type="checkbox" id="hideAllLabels" />
           Hide all fielder labels
         </label>
+
+        <!-- New: fielder count radio buttons -->
+        <div class="small-row">
+          <span style="font-size:0.8rem;">Number of fielders</span>
+          <label>
+            <input type="radio" name="fielderCount" value="11" checked />
+            11
+          </label>
+          <label>
+            <input type="radio" name="fielderCount" value="9" />
+            9 (hide F10 &amp; F11)
+          </label>
+        </div>
       </div>
 
       <!-- Fielder controls -->
@@ -495,6 +508,8 @@
       const windVisibleCheckbox = document.getElementById("windVisible");
       const windDirectionInputs = document.querySelectorAll('input[name="windDir"]');
 
+      const fielderCountInputs = document.querySelectorAll('input[name="fielderCount"]');
+
       const FIELD_RADIUS = 68;
       const FIELDER_COUNT = 11;
 
@@ -502,6 +517,7 @@
       let isMirrored = false;
       let labelsHiddenAll = false;
       let fieldOffsetX = 0;
+      let fielderCountMode = 11; // 11 or 9
 
       const fielders = [];
       let activeFielder = null;
@@ -598,7 +614,23 @@
         legLabel.setAttribute("x", legX.toString());
       }
 
+      function isFielderActive(f) {
+        if (fielderCountMode === 11) return true;
+        // 9-fielder mode: hide F10 & F11 (indices 9 and 10)
+        return f.i !== 9 && f.i !== 10;
+      }
+
       function updateFielderVisual(f) {
+        // Hide fielders that are not active in current mode
+        if (!isFielderActive(f)) {
+          f.circle.style.display = "none";
+          f.label.style.display = "none";
+          f.ring.style.display = "none";
+          return;
+        } else {
+          f.circle.style.display = "block";
+        }
+
         const displayX = isMirrored ? -f.x : f.x;
         const displayY = f.y;
 
@@ -722,8 +754,8 @@
         outerBorderCircle.setAttribute("cx", fieldOffsetX.toString());
         // innerCircle stays centered
         updateSectorPath();
-      
-        // NEW: update the numeric display
+
+        // update numeric display
         boundaryOffsetValue.textContent = fieldOffsetX.toString();
       }
 
@@ -1133,6 +1165,16 @@
           if (e.target.checked) {
             windDirection = e.target.value;
             updateWindDirection();
+          }
+        });
+      });
+
+      // New: fielder count radio events
+      fielderCountInputs.forEach((input) => {
+        input.addEventListener("change", (e) => {
+          if (e.target.checked) {
+            fielderCountMode = parseInt(e.target.value, 10);
+            updateAllFielders();
           }
         });
       });
