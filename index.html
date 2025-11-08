@@ -10,6 +10,8 @@
       --inner-circle-m: 27.432; /* 30 yards */
     }
 
+    * { box-sizing: border-box; }
+
     body {
       margin: 0;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -21,190 +23,979 @@
       min-height: 100vh;
     }
 
-    h1 { margin: 16px 0 0; text-align: center; }
-    .subtitle { text-align: center; color: #666; margin-bottom: 10px; }
+    h1 { margin: 16px 0 0; text-align: center; font-size: 1.8rem; }
+    .subtitle { text-align: center; color: #666; margin: 4px 0 10px; font-size: 0.9rem; }
 
-    .layout { display: flex; flex: 1; padding: 12px 16px; gap: 16px; }
-    @media (max-width:900px){ .layout{flex-direction:column;} }
-
-    .field-wrapper { flex:1; display:flex; align-items:center; justify-content:center; }
-    .field-card {
-      background:#fff; border-radius:16px; box-shadow:0 8px 20px rgba(0,0,0,0.1);
-      width:100%; max-width:640px; aspect-ratio:1/1; padding:12px;
-      display:flex; align-items:center; justify-content:center;
+    .layout {
+      display: flex;
+      flex: 1;
+      padding: 12px 16px 20px;
+      gap: 16px;
     }
-    #fieldSvg { width:100%; height:100%; touch-action:none; }
+
+    @media (max-width: 900px) {
+      .layout { flex-direction: column; }
+    }
+
+    .field-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+    }
+
+    .field-card {
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      padding: 12px;
+      width: 100%;
+      max-width: 640px;
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #fieldSvg {
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
 
     .controls {
-      flex:0 0 320px; background:#fff; border-radius:16px;
-      box-shadow:0 8px 20px rgba(0,0,0,0.1); padding:12px 14px;
-      display:flex; flex-direction:column; gap:10px;
+      flex: 0 0 320px;
+      max-width: 360px;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: calc(100vh - 120px);
     }
-    @media (max-width:900px){ .controls{max-width:100%;} }
 
-    .controls-section { border-bottom:1px solid #eee; padding-bottom:8px; }
-    .controls-section:last-of-type{border-bottom:none;}
-    .controls-section h2{font-size:1rem;margin:4px 0 6px;}
+    @media (max-width: 900px) {
+      .controls { max-width: 100%; max-height: none; }
+    }
 
-    .slider-row{display:flex;align-items:center;gap:8px;}
-    .slider-row span{font-size:0.85rem;color:#555;}
+    .controls-section {
+      margin-bottom: 8px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 8px;
+    }
+    .controls-section:last-of-type {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
 
-    .fielder-list{overflow-y:auto;max-height:60vh;}
-    .fielder-row{background:#faf7f3;border:1px solid #eee;border-radius:10px;
-      padding:6px 8px;margin-bottom:6px;}
-    .fielder-row-header{font-weight:600;font-size:0.85rem;margin-bottom:4px;}
-    .fielder-row label{font-size:0.8rem;display:flex;justify-content:space-between;align-items:center;margin:2px 0;}
-    .fielder-row input[type=text]{flex:1;margin-left:6px;padding:2px 4px;font-size:0.8rem;}
-    .fielder-row input[type=color]{margin-left:6px;width:28px;height:20px;}
-    .fielder-row input[type=checkbox]{margin-left:6px;}
+    .controls-section h2 {
+      font-size: 1rem;
+      margin: 4px 0 6px;
+    }
 
-    .mirror-toggle{display:flex;align-items:center;gap:6px;font-size:0.9rem;}
-    .note{font-size:0.75rem;color:#777;}
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .slider-row span {
+      font-size: 0.85rem;
+      color: #555;
+    }
+
+    input[type="range"] {
+      flex: 1;
+    }
+
+    label {
+      font-size: 0.85rem;
+    }
+
+    .mirror-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .note {
+      font-size: 0.75rem;
+      color: #777;
+      margin-top: 2px;
+    }
+
+    .fielder-list {
+      overflow-y: auto;
+      padding-right: 4px;
+      max-height: 55vh;
+    }
+
+    .fielder-row {
+      border-radius: 10px;
+      padding: 6px 8px;
+      margin-bottom: 6px;
+      background: #faf7f3;
+      border: 1px solid #eee;
+    }
+
+    .fielder-row-header {
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .fielder-row label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 2px 0;
+      font-size: 0.8rem;
+    }
+
+    .fielder-row input[type="text"] {
+      flex: 1;
+      margin-left: 6px;
+      padding: 2px 4px;
+      font-size: 0.8rem;
+    }
+
+    .fielder-row input[type="color"] {
+      margin-left: 6px;
+      width: 28px;
+      height: 20px;
+      padding: 0;
+      border: none;
+      background: transparent;
+    }
+
+    .fielder-row input[type="checkbox"] {
+      margin-left: 6px;
+    }
+
+    /* Arrows & highlight controls */
+    button {
+      font-family: inherit;
+      font-size: 0.8rem;
+      padding: 4px 8px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      background: #f4f4f4;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #e9e9e9;
+    }
+
+    .arrow-list {
+      margin-top: 6px;
+      max-height: 160px;
+      overflow-y: auto;
+    }
+
+    .arrow-row {
+      border-radius: 8px;
+      border: 1px solid #eee;
+      padding: 4px 6px;
+      margin-top: 4px;
+      background: #fafafa;
+      font-size: 0.8rem;
+    }
+
+    .arrow-row-header {
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .arrow-row-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .arrow-row-controls input[type="color"] {
+      width: 24px;
+      height: 18px;
+      padding: 0;
+      border: none;
+      background: transparent;
+    }
+
+    .arrow-row-controls input[type="range"] {
+      flex: 1;
+    }
+
+    .small-row {
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    /* SVG arrow styling */
+    .arrow-line {
+      cursor: pointer;
+    }
+
+    .arrow-handle {
+      stroke: #111;
+      stroke-width: 0.3;
+      fill: #ffffff;
+      cursor: pointer;
+    }
+
+    .fielder-circle {
+      cursor: grab;
+    }
   </style>
 </head>
 <body>
   <h1>Cricket Field Placement Visualizer</h1>
-  <div class="subtitle">Drag fielders, set colors & labels, mirror for different batters.</div>
+  <div class="subtitle">Drag fielders, add arrows, highlight sectors & mirror for different batters.</div>
 
   <div class="layout">
     <div class="field-wrapper">
       <div class="field-card">
         <svg id="fieldSvg" viewBox="-75 -75 150 150">
-          <circle cx="0" cy="0" r="68" fill="#c1e8b5" stroke="#0b6820" stroke-width="0.7"/>
-          <circle cx="0" cy="0" r="27.432" fill="none" stroke="#0b6820" stroke-dasharray="1.2 1.2" stroke-width="0.5"/>
-          <rect x="-2.5" y="-10" width="5" height="20" rx="1.5" ry="1.5" fill="#e0c6a2" stroke="#b89463" stroke-width="0.4"/>
+          <defs>
+            <marker id="arrowHead" viewBox="0 0 10 10" refX="9" refY="5"
+                    markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" />
+            </marker>
+          </defs>
+
+          <!-- Outer field (68m radius) -->
+          <circle
+            cx="0" cy="0" r="68"
+            fill="#b7e0ab"  <!-- slightly darker green -->
+            stroke="#0b6820" stroke-width="0.7"
+          ></circle>
+
+          <!-- Inner 30-yard circle -->
+          <circle
+            cx="0" cy="0" r="27.432"
+            fill="none"
+            stroke="#0b6820"
+            stroke-dasharray="1.2 1.2"
+            stroke-width="0.5"
+          ></circle>
+
+          <!-- Pitch -->
+          <rect
+            x="-2.5" y="-10" width="5" height="20"
+            rx="1.5" ry="1.5"
+            fill="#e0c6a2"
+            stroke="#b89463"
+            stroke-width="0.4"
+          ></rect>
+
+          <!-- Stumps -->
           <rect x="-0.6" y="-10.5" width="1.2" height="1.3" fill="#444"></rect>
-          <rect x="-0.6" y="9.2" width="1.2" height="1.3" fill="#444"></rect>
+          <rect x="-0.6" y="9.2"   width="1.2" height="1.3" fill="#444"></rect>
 
-          <text id="offLabel" x="-40" y="0" text-anchor="middle" font-size="6"
-            fill="#004b23" opacity="0.18" style="letter-spacing:2px;">OFF SIDE</text>
-          <text id="legLabel" x="40" y="0" text-anchor="middle" font-size="6"
-            fill="#7f1d1d" opacity="0.18" style="letter-spacing:2px;">LEG SIDE</text>
+          <!-- Side labels (slightly smaller now) -->
+          <text
+            id="offLabel"
+            x="-40" y="0"
+            text-anchor="middle"
+            dominant-baseline="middle"
+            font-size="5"
+            fill="#004b23"
+            opacity="0.18"
+            style="letter-spacing: 2px;"
+          >OFF SIDE</text>
 
+          <text
+            id="legLabel"
+            x="40" y="0"
+            text-anchor="middle"
+            dominant-baseline="middle"
+            font-size="5"
+            fill="#7f1d1d"
+            opacity="0.18"
+            style="letter-spacing: 2px;"
+          >LEG SIDE</text>
+
+          <!-- Sector highlight path (pie slice) -->
+          <path id="sectorHighlight"
+                fill="#facc15"
+                opacity="0.3"
+                stroke="none"></path>
+
+          <!-- Arrows -->
+          <g id="arrowsGroup"></g>
+
+          <!-- Fielders -->
           <g id="fieldersGroup"></g>
         </svg>
       </div>
     </div>
 
     <div class="controls">
+      <!-- Global settings -->
       <div class="controls-section">
         <h2>Global Settings</h2>
         <div class="slider-row">
           <span>Fielder size</span>
-          <input type="range" id="sizeSlider" min="1" max="5" step="0.2" value="2.5">
+          <input type="range" id="sizeSlider" min="1" max="5" step="0.2" value="2.5" />
         </div>
-        <label class="mirror-toggle"><input type="checkbox" id="mirrorToggle"> Mirror field</label>
-        <label class="mirror-toggle"><input type="checkbox" id="hideAllLabels"> Hide all labels</label>
+        <label class="mirror-toggle">
+          <input type="checkbox" id="mirrorToggle" />
+          Mirror field (off/leg & fielders)
+        </label>
+        <label class="mirror-toggle">
+          <input type="checkbox" id="hideAllLabels" />
+          Hide all fielder labels
+        </label>
+        <div class="note">Labels can also be hidden per fielder.</div>
       </div>
 
+      <!-- Fielder controls -->
       <div class="controls-section">
         <h2>Fielder Controls</h2>
+        <div class="note">Drag circles on the field. Edit label, color, highlight & visibility here.</div>
         <div class="fielder-list" id="fielderControls"></div>
+      </div>
+
+      <!-- Arrows & sector highlight -->
+      <div class="controls-section">
+        <h2>Arrows & Field Highlight</h2>
+
+        <button type="button" id="addArrowBtn">Add arrow</button>
+        <div class="note">Drag arrow body to move; drag round ends to resize & rotate.</div>
+        <div id="arrowList" class="arrow-list"></div>
+
+        <h3 style="margin-top:8px;font-size:0.9rem;">Sector highlight</h3>
+        <label class="small-row">
+          <input type="checkbox" id="sectorEnabled" />
+          Enable sector (translucent yellow wedge)
+        </label>
+        <div class="slider-row">
+          <span>Start angle</span>
+          <input type="range" id="sectorStart" min="0" max="360" step="5" value="300" />
+        </div>
+        <div class="slider-row">
+          <span>End angle</span>
+          <input type="range" id="sectorEnd" min="0" max="360" step="5" value="40" />
+        </div>
+        <div class="note">Angles are from center, in degrees, around the full circle.</div>
       </div>
     </div>
   </div>
 
   <script>
-  (function(){
-    const svg=document.getElementById("fieldSvg");
-    const fieldersGroup=document.getElementById("fieldersGroup");
-    const sizeSlider=document.getElementById("sizeSlider");
-    const mirrorToggle=document.getElementById("mirrorToggle");
-    const hideAllLabels=document.getElementById("hideAllLabels");
-    const fielderControls=document.getElementById("fielderControls");
-    const offLabel=document.getElementById("offLabel"), legLabel=document.getElementById("legLabel");
-    const FIELD_RADIUS=68, FIELDER_COUNT=11;
-    let fielderSize=parseFloat(sizeSlider.value), isMirrored=false, labelsHiddenAll=false;
-    const fielders=[], pt=svg.createSVGPoint(); let active=null;
+    (function () {
+      const svg = document.getElementById("fieldSvg");
+      const fieldersGroup = document.getElementById("fieldersGroup");
+      const arrowsGroup = document.getElementById("arrowsGroup");
+      const fielderControls = document.getElementById("fielderControls");
+      const sizeSlider = document.getElementById("sizeSlider");
+      const mirrorToggle = document.getElementById("mirrorToggle");
+      const hideAllLabels = document.getElementById("hideAllLabels");
+      const offLabel = document.getElementById("offLabel");
+      const legLabel = document.getElementById("legLabel");
 
-    function getSvgCoords(evt){pt.x=evt.clientX;pt.y=evt.clientY;
-      const ctm=svg.getScreenCTM();if(!ctm)return{x:0,y:0};
-      const inv=ctm.inverse(),p=pt.matrixTransform(inv);return{x:p.x,y:p.y};}
-    function clamp(x,y,r){const d=Math.sqrt(x*x+y*y);if(d<=r)return{x,y};const s=r/d;return{x:x*s,y:y*s};}
+      const addArrowBtn = document.getElementById("addArrowBtn");
+      const arrowList = document.getElementById("arrowList");
 
-    function createFielders(){
-      const ring=35;
-      for(let i=0;i<FIELDER_COUNT;i++){
-        const a=2*Math.PI*i/FIELDER_COUNT, x=ring*Math.cos(a), y=ring*Math.sin(a);
-        const c=document.createElementNS("http://www.w3.org/2000/svg","circle");
-        c.setAttribute("r",fielderSize); c.setAttribute("fill","#1d4ed8"); c.setAttribute("stroke","#222"); c.setAttribute("stroke-width","0.4");
-        c.dataset.index=i; c.style.cursor="grab";
-        const t=document.createElementNS("http://www.w3.org/2000/svg","text");
-        t.setAttribute("text-anchor","middle"); t.setAttribute("dominant-baseline","central");
-        fieldersGroup.append(c,t);
-        fielders.push({i,x,y,color:"#1d4ed8",name:"",hidden:false,circle:c,label:t});
+      const sectorPath = document.getElementById("sectorHighlight");
+      const sectorEnabledCheckbox = document.getElementById("sectorEnabled");
+      const sectorStartInput = document.getElementById("sectorStart");
+      const sectorEndInput = document.getElementById("sectorEnd");
+
+      const FIELD_RADIUS = 68;
+      const FIELDER_COUNT = 11;
+
+      let fielderSize = parseFloat(sizeSlider.value);
+      let isMirrored = false;
+      let labelsHiddenAll = false;
+
+      const fielders = [];
+      let activeFielder = null;
+
+      const pt = svg.createSVGPoint();
+
+      // Arrows
+      const arrows = [];
+      let nextArrowId = 1;
+      let activeArrow = null;
+      let arrowDragMode = null; // "move" | "start" | "end"
+      let prevArrowPointer = null;
+
+      // Sector
+      let sectorEnabled = false;
+      let sectorStartDeg = parseFloat(sectorStartInput.value) || 0;
+      let sectorEndDeg = parseFloat(sectorEndInput.value) || 0;
+
+      function getSvgCoords(evt) {
+        pt.x = evt.clientX;
+        pt.y = evt.clientY;
+        const ctm = svg.getScreenCTM();
+        if (!ctm) return { x: 0, y: 0 };
+        const inv = ctm.inverse();
+        const p = pt.matrixTransform(inv);
+        return { x: p.x, y: p.y };
       }
-      updateAll();
-    }
 
-    function updateSideLabels(){
-      const offX=isMirrored?40:-40, legX=isMirrored?-40:40;
-      offLabel.setAttribute("x",offX); legLabel.setAttribute("x",legX);
-    }
+      function clampToCircle(x, y, radiusLimit) {
+        const r = Math.sqrt(x * x + y * y);
+        if (r <= radiusLimit) return { x, y };
+        const scale = radiusLimit / r;
+        return { x: x * scale, y: y * scale };
+      }
 
-    function updateFielder(f){
-      const dx=isMirrored?-f.x:f.x, dy=f.y;
-      f.circle.setAttribute("cx",dx); f.circle.setAttribute("cy",dy);
-      f.circle.setAttribute("r",fielderSize); f.circle.setAttribute("fill",f.color);
-      const txt=f.name.trim()||`F${f.i+1}`;
-      f.label.textContent=txt;
-      f.label.setAttribute("x",dx);
-      f.label.setAttribute("y",dy-(fielderSize+2.0)); // increased spacing
-      f.label.setAttribute("font-size",fielderSize*1.5);
-      f.label.style.display=(f.hidden||labelsHiddenAll)?"none":"block";
-    }
+      // FIELDERS -----------------------------------------------------------------
+      function createInitialFielders() {
+        const ring = 35; // radius for initial ring
+        for (let i = 0; i < FIELDER_COUNT; i++) {
+          const angle = (2 * Math.PI * i) / FIELDER_COUNT;
+          const logicalX = ring * Math.cos(angle);
+          const logicalY = ring * Math.sin(angle);
 
-    function updateAll(){fielders.forEach(updateFielder);}
+          // Highlight ring
+          const ringCircle = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "circle"
+          );
+          ringCircle.setAttribute("fill", "none");
+          ringCircle.setAttribute("stroke", "#ef4444");
+          ringCircle.setAttribute("stroke-width", "0.5");
+          ringCircle.style.display = "none";
+          ringCircle.style.pointerEvents = "none";
 
-    function buildControls(){
-      fielderControls.innerHTML="";
-      fielders.forEach(f=>{
-        const row=document.createElement("div"); row.className="fielder-row";
-        row.innerHTML=`<div class='fielder-row-header'>Fielder ${f.i+1}</div>`;
-        const nameLbl=document.createElement("label");
-        nameLbl.innerHTML=`Label <input type="text" value="${f.name}" data-i="${f.i}">`;
-        const colorLbl=document.createElement("label");
-        colorLbl.innerHTML=`Color <input type="color" value="${f.color}" data-i="${f.i}">`;
-        const hideLbl=document.createElement("label");
-        hideLbl.innerHTML=`Hide label <input type="checkbox" data-i="${f.i}">`;
-        row.append(nameLbl,colorLbl,hideLbl); fielderControls.append(row);
+          // Main fielder circle
+          const circle = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "circle"
+          );
+          circle.setAttribute("r", fielderSize.toString());
+          circle.setAttribute("stroke", "#222");
+          circle.setAttribute("stroke-width", "0.4");
+          circle.setAttribute("fill", "#1d4ed8");
+          circle.dataset.index = i.toString();
+          circle.classList.add("fielder-circle");
 
-        nameLbl.querySelector("input").oninput=e=>{
-          f.name=e.target.value;updateFielder(f);
+          // Label
+          const label = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "text"
+          );
+          label.setAttribute("text-anchor", "middle");
+          label.setAttribute("dominant-baseline", "central");
+          label.setAttribute("font-size", (fielderSize * 1.5).toString());
+          label.setAttribute("fill", "#111");
+          label.style.pointerEvents = "none";
+
+          // Append in this order so ring is around/behind marker
+          fieldersGroup.appendChild(ringCircle);
+          fieldersGroup.appendChild(circle);
+          fieldersGroup.appendChild(label);
+
+          fielders.push({
+            i,
+            x: logicalX,
+            y: logicalY,
+            color: "#1d4ed8",
+            name: "",
+            hidden: false,
+            highlight: false,
+            ring: ringCircle,
+            circle,
+            label,
+          });
+        }
+
+        updateAllFielders();
+      }
+
+      function updateSideLabels() {
+        const offX = isMirrored ? 40 : -40;
+        const legX = isMirrored ? -40 : 40;
+        offLabel.setAttribute("x", offX.toString());
+        legLabel.setAttribute("x", legX.toString());
+      }
+
+      function updateFielderVisual(f) {
+        const displayX = isMirrored ? -f.x : f.x;
+        const displayY = f.y;
+
+        f.circle.setAttribute("cx", displayX.toString());
+        f.circle.setAttribute("cy", displayY.toString());
+        f.circle.setAttribute("r", fielderSize.toString());
+        f.circle.setAttribute("fill", f.color);
+
+        const txt = f.name.trim() || `F${f.i + 1}`;
+        f.label.textContent = txt;
+        f.label.setAttribute("x", displayX.toString());
+        f.label.setAttribute(
+          "y",
+          (displayY - (fielderSize + 2.0)).toString() // slightly more spacing
+        );
+        f.label.setAttribute(
+          "font-size",
+          (fielderSize * 1.5).toString()
+        );
+        f.label.style.display =
+          f.hidden || labelsHiddenAll ? "none" : "block";
+
+        if (f.highlight) {
+          f.ring.setAttribute("cx", displayX.toString());
+          f.ring.setAttribute("cy", displayY.toString());
+          f.ring.setAttribute("r", (fielderSize + 1.4).toString());
+          f.ring.style.display = "block";
+        } else {
+          f.ring.style.display = "none";
+        }
+      }
+
+      function updateAllFielders() {
+        fielders.forEach(updateFielderVisual);
+      }
+
+      function buildFielderControls() {
+        fielderControls.innerHTML = "";
+        fielders.forEach((f) => {
+          const row = document.createElement("div");
+          row.className = "fielder-row";
+
+          const header = document.createElement("div");
+          header.className = "fielder-row-header";
+          header.textContent = `Fielder ${f.i + 1}`;
+          row.appendChild(header);
+
+          // Label input
+          const labelWrapper = document.createElement("label");
+          labelWrapper.textContent = "Label";
+          const labelInput = document.createElement("input");
+          labelInput.type = "text";
+          labelInput.placeholder = `F${f.i + 1}`;
+          labelInput.value = f.name;
+          labelInput.dataset.index = f.i.toString();
+          labelWrapper.appendChild(labelInput);
+          row.appendChild(labelWrapper);
+
+          // Color input
+          const colorWrapper = document.createElement("label");
+          colorWrapper.textContent = "Color";
+          const colorInput = document.createElement("input");
+          colorInput.type = "color";
+          colorInput.value = f.color;
+          colorInput.dataset.index = f.i.toString();
+          colorWrapper.appendChild(colorInput);
+          row.appendChild(colorWrapper);
+
+          // Hide label checkbox
+          const hideWrapper = document.createElement("label");
+          hideWrapper.textContent = "Hide label";
+          const hideInput = document.createElement("input");
+          hideInput.type = "checkbox";
+          hideInput.checked = f.hidden;
+          hideInput.dataset.index = f.i.toString();
+          hideWrapper.appendChild(hideInput);
+          row.appendChild(hideWrapper);
+
+          // Highlight ring checkbox
+          const highlightWrapper = document.createElement("label");
+          highlightWrapper.textContent = "Highlight (red ring)";
+          const highlightInput = document.createElement("input");
+          highlightInput.type = "checkbox";
+          highlightInput.checked = f.highlight;
+          highlightInput.dataset.index = f.i.toString();
+          highlightWrapper.appendChild(highlightInput);
+          row.appendChild(highlightWrapper);
+
+          fielderControls.appendChild(row);
+
+          labelInput.addEventListener("input", (e) => {
+            const idx = parseInt(e.target.dataset.index, 10);
+            const ff = fielders[idx];
+            ff.name = e.target.value;
+            updateFielderVisual(ff);
+          });
+
+          colorInput.addEventListener("input", (e) => {
+            const idx = parseInt(e.target.dataset.index, 10);
+            const ff = fielders[idx];
+            ff.color = e.target.value;
+            updateFielderVisual(ff);
+          });
+
+          hideInput.addEventListener("change", (e) => {
+            const idx = parseInt(e.target.dataset.index, 10);
+            const ff = fielders[idx];
+            ff.hidden = e.target.checked;
+            updateFielderVisual(ff);
+          });
+
+          highlightInput.addEventListener("change", (e) => {
+            const idx = parseInt(e.target.dataset.index, 10);
+            const ff = fielders[idx];
+            ff.highlight = e.target.checked;
+            updateFielderVisual(ff);
+          });
+        });
+      }
+
+      // ARROWS -------------------------------------------------------------------
+      function getArrowById(id) {
+        return arrows.find((a) => a.id === id);
+      }
+
+      function updateArrowVisual(arrow) {
+        arrow.lineEl.setAttribute("x1", arrow.x1.toString());
+        arrow.lineEl.setAttribute("y1", arrow.y1.toString());
+        arrow.lineEl.setAttribute("x2", arrow.x2.toString());
+        arrow.lineEl.setAttribute("y2", arrow.y2.toString());
+        arrow.lineEl.setAttribute("stroke", arrow.color);
+        arrow.lineEl.setAttribute("stroke-width", arrow.width.toString());
+        arrow.lineEl.setAttribute("opacity", arrow.opacity.toString());
+
+        arrow.handleStartEl.setAttribute("cx", arrow.x1.toString());
+        arrow.handleStartEl.setAttribute("cy", arrow.y1.toString());
+        arrow.handleEndEl.setAttribute("cx", arrow.x2.toString());
+        arrow.handleEndEl.setAttribute("cy", arrow.y2.toString());
+      }
+
+      function rebuildArrowList() {
+        arrowList.innerHTML = "";
+        arrows.forEach((arrow, idx) => {
+          const row = document.createElement("div");
+          row.className = "arrow-row";
+
+          const header = document.createElement("div");
+          header.className = "arrow-row-header";
+          header.textContent = `Arrow ${idx + 1}`;
+          row.appendChild(header);
+
+          const controls = document.createElement("div");
+          controls.className = "arrow-row-controls";
+
+          const colorLabel = document.createElement("span");
+          colorLabel.textContent = "Color";
+          colorLabel.style.fontSize = "0.75rem";
+
+          const colorInput = document.createElement("input");
+          colorInput.type = "color";
+          colorInput.value = arrow.color;
+
+          const widthLabel = document.createElement("span");
+          widthLabel.textContent = "Width";
+          widthLabel.style.fontSize = "0.75rem";
+
+          const widthInput = document.createElement("input");
+          widthInput.type = "range";
+          widthInput.min = "0.4";
+          widthInput.max = "3";
+          widthInput.step = "0.1";
+          widthInput.value = arrow.width.toString();
+
+          const deleteBtn = document.createElement("button");
+          deleteBtn.type = "button";
+          deleteBtn.textContent = "Delete";
+
+          controls.appendChild(colorLabel);
+          controls.appendChild(colorInput);
+          controls.appendChild(widthLabel);
+          controls.appendChild(widthInput);
+          controls.appendChild(deleteBtn);
+
+          row.appendChild(controls);
+          arrowList.appendChild(row);
+
+          colorInput.addEventListener("input", () => {
+            arrow.color = colorInput.value;
+            updateArrowVisual(arrow);
+          });
+
+          widthInput.addEventListener("input", () => {
+            arrow.width = parseFloat(widthInput.value);
+            updateArrowVisual(arrow);
+          });
+
+          deleteBtn.addEventListener("click", () => {
+            // Remove from DOM
+            arrowsGroup.removeChild(arrow.lineEl);
+            arrowsGroup.removeChild(arrow.handleStartEl);
+            arrowsGroup.removeChild(arrow.handleEndEl);
+            // Remove from array
+            const idxInArr = arrows.findIndex((a) => a.id === arrow.id);
+            if (idxInArr >= 0) arrows.splice(idxInArr, 1);
+            rebuildArrowList();
+          });
+        });
+      }
+
+      function createArrow() {
+        const id = nextArrowId++;
+        // Default arrow roughly across the pitch horizontally
+        const x1 = -10;
+        const y1 = 0;
+        const x2 = 10;
+        const y2 = 0;
+
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.classList.add("arrow-line");
+        line.dataset.id = id.toString();
+        line.setAttribute("x1", x1.toString());
+        line.setAttribute("y1", y1.toString());
+        line.setAttribute("x2", x2.toString());
+        line.setAttribute("y2", y2.toString());
+        line.setAttribute("stroke", "#b91c1c");
+        line.setAttribute("stroke-width", "1.2");
+        line.setAttribute("opacity", "0.85");
+        line.setAttribute("marker-end", "url(#arrowHead)");
+
+        const handleStart = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "circle"
+        );
+        handleStart.classList.add("arrow-handle");
+        handleStart.dataset.id = id.toString();
+        handleStart.dataset.handle = "start";
+        handleStart.setAttribute("r", "1.4");
+
+        const handleEnd = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "circle"
+        );
+        handleEnd.classList.add("arrow-handle");
+        handleEnd.dataset.id = id.toString();
+        handleEnd.dataset.handle = "end";
+        handleEnd.setAttribute("r", "1.4");
+
+        arrowsGroup.appendChild(line);
+        arrowsGroup.appendChild(handleStart);
+        arrowsGroup.appendChild(handleEnd);
+
+        const arrow = {
+          id,
+          x1,
+          y1,
+          x2,
+          y2,
+          color: "#b91c1c",
+          width: 1.2,
+          opacity: 0.85,
+          lineEl: line,
+          handleStartEl: handleStart,
+          handleEndEl: handleEnd,
         };
-        colorLbl.querySelector("input").oninput=e=>{
-          f.color=e.target.value;updateFielder(f);
-        };
-        hideLbl.querySelector("input").onchange=e=>{
-          f.hidden=e.target.checked;updateFielder(f);
-        };
+        arrows.push(arrow);
+        updateArrowVisual(arrow);
+        rebuildArrowList();
+      }
+
+      function arrowPointerDown(evt, target) {
+        const id = parseInt(target.dataset.id || "-1", 10);
+        if (isNaN(id)) return;
+        const arrow = getArrowById(id);
+        if (!arrow) return;
+
+        activeArrow = arrow;
+        if (target.classList.contains("arrow-line")) {
+          arrowDragMode = "move";
+        } else {
+          arrowDragMode = target.dataset.handle === "start" ? "start" : "end";
+        }
+
+        prevArrowPointer = getSvgCoords(evt);
+        evt.preventDefault();
+      }
+
+      function arrowPointerMove(evt) {
+        if (!activeArrow || !arrowDragMode) return;
+        const p = getSvgCoords(evt);
+
+        if (arrowDragMode === "move") {
+          const dx = p.x - prevArrowPointer.x;
+          const dy = p.y - prevArrowPointer.y;
+          prevArrowPointer = p;
+
+          const p1 = clampToCircle(
+            activeArrow.x1 + dx,
+            activeArrow.y1 + dy,
+            FIELD_RADIUS
+          );
+          const p2 = clampToCircle(
+            activeArrow.x2 + dx,
+            activeArrow.y2 + dy,
+            FIELD_RADIUS
+          );
+          activeArrow.x1 = p1.x;
+          activeArrow.y1 = p1.y;
+          activeArrow.x2 = p2.x;
+          activeArrow.y2 = p2.y;
+        } else if (arrowDragMode === "start") {
+          const p1 = clampToCircle(p.x, p.y, FIELD_RADIUS);
+          activeArrow.x1 = p1.x;
+          activeArrow.y1 = p1.y;
+        } else if (arrowDragMode === "end") {
+          const p2 = clampToCircle(p.x, p.y, FIELD_RADIUS);
+          activeArrow.x2 = p2.x;
+          activeArrow.y2 = p2.y;
+        }
+
+        updateArrowVisual(activeArrow);
+      }
+
+      // SECTOR / PIE HIGHLIGHT ---------------------------------------------------
+      function degToRad(deg) {
+        return (deg * Math.PI) / 180;
+      }
+
+      function updateSectorPath() {
+        if (!sectorEnabled) {
+          sectorPath.style.display = "none";
+          sectorPath.setAttribute("d", "");
+          return;
+        }
+
+        sectorPath.style.display = "block";
+
+        let start = sectorStartDeg % 360;
+        let end = sectorEndDeg % 360;
+        if (start < 0) start += 360;
+        if (end < 0) end += 360;
+
+        let delta = end - start;
+        if (delta <= 0) {
+          delta += 360;
+        }
+        const largeArcFlag = delta > 180 ? 1 : 0;
+        const sweepFlag = 1;
+
+        const R = FIELD_RADIUS;
+        const startRad = degToRad(start);
+        const endRad = degToRad(end);
+
+        const x1 = R * Math.cos(startRad);
+        const y1 = R * Math.sin(startRad);
+        const x2 = R * Math.cos(endRad);
+        const y2 = R * Math.sin(endRad);
+
+        const d = [
+          "M 0 0",
+          "L", x1, y1,
+          "A", R, R, 0, largeArcFlag, sweepFlag, x2, y2,
+          "Z"
+        ].join(" ");
+
+        sectorPath.setAttribute("d", d);
+      }
+
+      // POINTER HANDLING ---------------------------------------------------------
+      function handlePointerDown(evt) {
+        const target = evt.target;
+
+        // Fielder dragging
+        if (target.classList.contains("fielder-circle")) {
+          const idx = parseInt(target.dataset.index || "-1", 10);
+          if (!isNaN(idx) && idx >= 0 && idx < fielders.length) {
+            activeFielder = fielders[idx];
+            target.style.cursor = "grabbing";
+            evt.preventDefault();
+          }
+          return;
+        }
+
+        // Arrow interaction
+        if (
+          target.classList.contains("arrow-line") ||
+          target.classList.contains("arrow-handle")
+        ) {
+          arrowPointerDown(evt, target);
+          return;
+        }
+      }
+
+      function handlePointerMove(evt) {
+        // Move fielder
+        if (activeFielder) {
+          const { x, y } = getSvgCoords(evt);
+          const clamped = clampToCircle(
+            x,
+            y,
+            FIELD_RADIUS - fielderSize * 0.8
+          );
+          const displayX = clamped.x;
+          const displayY = clamped.y;
+          activeFielder.x = isMirrored ? -displayX : displayX;
+          activeFielder.y = displayY;
+          updateFielderVisual(activeFielder);
+        }
+
+        // Move / resize arrow
+        if (activeArrow) {
+          arrowPointerMove(evt);
+        }
+      }
+
+      function handlePointerUp() {
+        if (activeFielder && activeFielder.circle) {
+          activeFielder.circle.style.cursor = "grab";
+        }
+        activeFielder = null;
+
+        activeArrow = null;
+        arrowDragMode = null;
+        prevArrowPointer = null;
+      }
+
+      // EVENTS -------------------------------------------------------------------
+      svg.addEventListener("pointerdown", handlePointerDown);
+      svg.addEventListener("pointermove", handlePointerMove);
+      svg.addEventListener("pointerup", handlePointerUp);
+      svg.addEventListener("pointerleave", handlePointerUp);
+
+      sizeSlider.addEventListener("input", () => {
+        fielderSize = parseFloat(sizeSlider.value);
+        updateAllFielders();
       });
-    }
 
-    function pointerDown(e){
-      if(!(e.target instanceof SVGCircleElement))return;
-      const i=parseInt(e.target.dataset.index);active=fielders[i];
-      e.target.style.cursor="grabbing";e.preventDefault();
-    }
-    function pointerMove(e){
-      if(!active)return;
-      const {x,y}=getSvgCoords(e);
-      const p=clamp(x,y,FIELD_RADIUS-fielderSize*0.8);
-      active.x=isMirrored?-p.x:p.x;active.y=p.y;updateFielder(active);
-    }
-    function pointerUp(){if(active){active.circle.style.cursor="grab";active=null;}}
+      mirrorToggle.addEventListener("change", () => {
+        isMirrored = mirrorToggle.checked;
+        updateSideLabels();
+        updateAllFielders();
+      });
 
-    svg.addEventListener("pointerdown",pointerDown);
-    svg.addEventListener("pointermove",pointerMove);
-    svg.addEventListener("pointerup",pointerUp);
-    svg.addEventListener("pointerleave",pointerUp);
+      hideAllLabels.addEventListener("change", () => {
+        labelsHiddenAll = hideAllLabels.checked;
+        updateAllFielders();
+      });
 
-    sizeSlider.oninput=()=>{fielderSize=parseFloat(sizeSlider.value);updateAll();};
-    mirrorToggle.onchange=()=>{isMirrored=mirrorToggle.checked;updateSideLabels();updateAll();};
-    hideAllLabels.onchange=()=>{labelsHiddenAll=hideAllLabels.checked;updateAll();};
+      addArrowBtn.addEventListener("click", () => {
+        createArrow();
+      });
 
-    createFielders(); buildControls(); updateSideLabels();
-  })();
+      sectorEnabledCheckbox.addEventListener("change", () => {
+        sectorEnabled = sectorEnabledCheckbox.checked;
+        updateSectorPath();
+      });
+
+      sectorStartInput.addEventListener("input", () => {
+        sectorStartDeg = parseFloat(sectorStartInput.value) || 0;
+        updateSectorPath();
+      });
+
+      sectorEndInput.addEventListener("input", () => {
+        sectorEndDeg = parseFloat(sectorEndInput.value) || 0;
+        updateSectorPath();
+      });
+
+      // INIT ---------------------------------------------------------------------
+      createInitialFielders();
+      buildFielderControls();
+      updateSideLabels();
+      updateSectorPath();
+    })();
   </script>
 </body>
 </html>
