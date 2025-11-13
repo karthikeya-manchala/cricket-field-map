@@ -256,6 +256,11 @@
       gap: 3px;
       font-size: 0.8rem;
     }
+
+    input[type="number"],
+    input[type="text"] {
+      font-family: inherit;
+    }
   </style>
 </head>
 <body>
@@ -324,22 +329,22 @@
             <!-- per-arrow markers will be inserted here from JS -->
           </defs>
 
-          <!-- Outer field (68m radius) -->
-          <circle
+          <!-- Outer field as ellipse (default 68m straight & square) -->
+          <ellipse
             id="outerField"
-            cx="0" cy="0" r="68"
+            cx="0" cy="0" rx="68" ry="68"
             fill="url(#fieldGradient)"
             stroke="#0b6820" stroke-width="0.7"
-          ></circle>
+          ></ellipse>
 
-          <!-- Outer border -->
-          <circle
+          <!-- Outer border ellipse -->
+          <ellipse
             id="outerBorder"
-            cx="0" cy="0" r="68"
+            cx="0" cy="0" rx="68" ry="68"
             fill="none"
             stroke="#1b4d1a"
             stroke-width="1.1"
-          ></circle>
+          ></ellipse>
 
           <!-- 30-yard oval:
                Two semicircles (radius 27.432) centered on each wicket at (0,-10) and (0,10),
@@ -454,7 +459,39 @@
           <input type="range" id="boundaryOffset" min="-10" max="10" step="1" value="0" />
         </div>
 
-        <div class="slider-row">
+        <!-- NEW: outer boundary ellipse controls -->
+        <div class="small-row">
+          <span style="font-size:0.8rem;">Outer boundary (ellipse, m)</span>
+        </div>
+        <div class="small-row" style="gap:8px; flex-wrap:wrap;">
+          <label style="display:flex; align-items:center; gap:4px; font-size:0.8rem;">
+            <span>Straight</span>
+            <input
+              type="number"
+              id="straightBoundary"
+              min="40"
+              max="90"
+              step="1"
+              value="68"
+              style="width:60px;"
+            />
+          </label>
+          <label style="display:flex; align-items:center; gap:4px; font-size:0.8rem;">
+            <span>Square</span>
+            <input
+              type="number"
+              id="squareBoundary"
+              min="40"
+              max="90"
+              step="1"
+              value="68"
+              style="width:60px;"
+            />
+          </label>
+        </div>
+        <div class="note">Straight = along pitch, Square = across. Default 68/68.</div>
+
+        <div class="slider-row" style="margin-top:6px;">
           <span>All fielder color</span>
           <input type="color" id="allFielderColor" value="#1d4ed8" />
         </div>
@@ -479,6 +516,21 @@
             9 (hide F10 &amp; F11)
           </label>
         </div>
+
+        <!-- NEW: download controls -->
+        <div class="small-row" style="margin-top:8px; gap:6px; flex-wrap:wrap;">
+          <label style="display:flex; align-items:center; gap:4px; flex:1; font-size:0.8rem;">
+            <span>Filename</span>
+            <input
+              type="text"
+              id="filenameInput"
+              placeholder="field-map"
+              style="flex:1; max-width:150px; padding:2px 4px; font-size:0.8rem;"
+            />
+          </label>
+          <button type="button" id="downloadPngBtn">Download PNG</button>
+        </div>
+        <div class="note">If left blank, it downloads as <code>field-map.png</code>.</div>
       </div>
 
       <div class="controls-section">
@@ -510,6 +562,9 @@
       const offLabel = document.getElementById("offLabel");
       const legLabel = document.getElementById("legLabel");
 
+      const straightBoundaryInput = document.getElementById("straightBoundary");
+      const squareBoundaryInput = document.getElementById("squareBoundary");
+
       const addArrowBtn = document.getElementById("addArrowBtn");
       const hideArrowHandlesCheckbox = document.getElementById("hideArrowHandles");
       const arrowList = document.getElementById("arrowList");
@@ -526,7 +581,16 @@
 
       const fielderCountInputs = document.querySelectorAll('input[name="fielderCount"]');
 
-      const FIELD_RADIUS = 68;
+      const downloadPngBtn = document.getElementById("downloadPngBtn");
+      const filenameInput = document.getElementById("filenameInput");
+
+      // Ellipse boundary dimensions (m)
+      let straightBoundaryM = 68; // along the pitch (top-bottom)
+      let squareBoundaryM = 68;   // across the pitch (left-right)
+
+      // Used for clamping fielders/arrows & sector radius
+      let FIELD_RADIUS = 68;
+
       const FIELDER_COUNT = 11;
 
       let fielderSize = parseFloat(sizeSlider.value);
@@ -617,17 +681,17 @@
           });
         }
 
-        // Preset F1–F9 positions (roughly matching your example)
+        // Preset F1–F9 positions
         const presetPositions = [
           { i: 0, x: 12,  y: -20 },   // F1 - short fine
           { i: 1, x: -32,  y: -54 },  // F2 - deep third
           { i: 2, x: -19,  y: -11 },  // F3 - backward point
-          { i: 3, x: -24, y: 0 },   // F4 - point
+          { i: 3, x: -24, y: 0 },     // F4 - point
           { i: 4, x: -20,   y: 13 },  // F5 - cover
-          { i: 5, x: -19, y: 59 },  // F6 - long off
-          { i: 6, x: 30, y: 56 }, // F7 - long on
-          { i: 7, x: 59,   y: 24 }, // F8 - deep midwicket
-          { i: 8, x: 61,  y: -16 }, // F9 - deep backward square
+          { i: 5, x: -19, y: 59 },    // F6 - long off
+          { i: 6, x: 30, y: 56 },     // F7 - long on
+          { i: 7, x: 59,   y: 24 },   // F8 - deep midwicket
+          { i: 8, x: 61,  y: -16 },   // F9 - deep backward square
           // F10 (9) and F11 (10) stay on the default ring
         ];
 
@@ -780,13 +844,31 @@
         });
       }
 
-      // BOUNDARY OFFSET ----------------------------------------------------------
+      // BOUNDARY OFFSET & ELLIPSE -----------------------------------------------
       function updateFieldOffset() {
         fieldOffsetX = parseFloat(boundaryOffsetInput.value) || 0;
         outerFieldCircle.setAttribute("cx", fieldOffsetX.toString());
         outerBorderCircle.setAttribute("cx", fieldOffsetX.toString());
         // 30-yard oval stays centered on the pitch, by design
         boundaryOffsetValue.textContent = fieldOffsetX.toString();
+        updateSectorPath();
+      }
+
+      function updateBoundarySize() {
+        const straightVal = parseFloat(straightBoundaryInput.value) || 68;
+        const squareVal = parseFloat(squareBoundaryInput.value) || 68;
+        straightBoundaryM = straightVal;
+        squareBoundaryM = squareVal;
+
+        // FIELD_RADIUS used for clamping & sector radius
+        FIELD_RADIUS = Math.max(straightBoundaryM, squareBoundaryM);
+
+        // Update ellipse radii (square = horizontal, straight = vertical)
+        outerFieldCircle.setAttribute("rx", squareBoundaryM.toString());
+        outerFieldCircle.setAttribute("ry", straightBoundaryM.toString());
+        outerBorderCircle.setAttribute("rx", squareBoundaryM.toString());
+        outerBorderCircle.setAttribute("ry", straightBoundaryM.toString());
+
         updateSectorPath();
       }
 
@@ -1137,6 +1219,48 @@
         prevArrowPointer = null;
       }
 
+      // PNG DOWNLOAD (SVG → canvas) ---------------------------------------------
+      function downloadFieldAsPNG() {
+        const serializer = new XMLSerializer();
+        let source = serializer.serializeToString(svg);
+
+        // Ensure proper namespaces
+        if (!source.match(/^<svg[^>]+xmlns="http:\/\/www\.w3\.org\/2000\/svg"/)) {
+          source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+        }
+        if (!source.match(/^<svg[^>]+xmlns:xlink="http:\/\/www\.w3\.org\/1999\/xlink"/)) {
+          source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+        }
+
+        const blob = new Blob([source], { type: "image/svg+xml;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+
+        const img = new Image();
+        img.onload = function () {
+          const canvas = document.createElement("canvas");
+          const size = 1024; // export resolution
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, size, size);
+          URL.revokeObjectURL(url);
+
+          const rawName = filenameInput.value.trim();
+          let fileName = rawName || "field-map";
+          if (!fileName.toLowerCase().endsWith(".png")) {
+            fileName += ".png";
+          }
+
+          const link = document.createElement("a");
+          link.download = fileName;
+          link.href = canvas.toDataURL("image/png");
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        };
+        img.src = url;
+      }
+
       // EVENTS -------------------------------------------------------------------
       svg.addEventListener("pointerdown", handlePointerDown);
       svg.addEventListener("pointermove", handlePointerMove);
@@ -1151,6 +1275,9 @@
       boundaryOffsetInput.addEventListener("input", () => {
         updateFieldOffset();
       });
+
+      straightBoundaryInput.addEventListener("input", updateBoundarySize);
+      squareBoundaryInput.addEventListener("input", updateBoundarySize);
 
       allFielderColorInput.addEventListener("input", () => {
         const col = allFielderColorInput.value;
@@ -1216,11 +1343,16 @@
         });
       });
 
+      if (downloadPngBtn) {
+        downloadPngBtn.addEventListener("click", downloadFieldAsPNG);
+      }
+
       // INIT ---------------------------------------------------------------------
       createInitialFielders();
       buildFielderControls();
       updateSideLabels();
       updateFieldOffset();
+      updateBoundarySize();  // sync ellipse & FIELD_RADIUS
       updateSectorPath();
       updateWindVisibility();
       updateWindDirection();
