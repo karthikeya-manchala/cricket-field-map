@@ -311,21 +311,6 @@
             <input type="radio" name="windDir" value="left" />
             ← left
           </label>
-                  <!-- NEW: download controls -->
-        <div class="small-row" style="margin-top:8px; gap:6px; flex-wrap:wrap;">
-          <label style="display:flex; align-items:center; gap:4px; flex:1; font-size:0.8rem;">
-            <span>Filename</span>
-            <input
-              type="text"
-              id="filenameInput"
-              placeholder="field-map"
-              style="flex:1; max-width:150px; padding:2px 4px; font-size:0.8rem;"
-            />
-          </label>
-          <button type="button" id="downloadPngBtn">Download PNG</button>
-        </div>
-        <div class="note">If left blank, it downloads as <code>field-map.png</code>.</div>
-      </div>
         </div>
       </div>
     </div>
@@ -530,6 +515,22 @@
             9 (hide F10 &amp; F11)
           </label>
         </div>
+
+        <!-- NEW: download controls -->
+        <div class="small-row" style="margin-top:8px; gap:6px; flex-wrap:wrap;">
+          <label style="display:flex; align-items:center; gap:4px; flex:1; font-size:0.8rem;">
+            <span>Filename</span>
+            <input
+              type="text"
+              id="filenameInput"
+              placeholder="field-map"
+              style="flex:1; max-width:150px; padding:2px 4px; font-size:0.8rem;"
+            />
+          </label>
+          <button type="button" id="downloadPngBtn">Download PNG</button>
+        </div>
+        <div class="note">If left blank, it downloads as <code>field-map.png</code>.</div>
+      </div>
 
       <div class="controls-section">
         <h2>Fielder Controls</h2>
