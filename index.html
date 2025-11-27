@@ -46,17 +46,17 @@
     }
 
     .field-card {
-      background: #ffffff;
-      border-radius: 16px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-      padding: 12px;
-      width: 100%;
-      max-width: 640px;
-      aspect-ratio: 1 / 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+  background: transparent;       /* let the body background show through */
+  border-radius: 0;              /* optional: remove rounded corners */
+  box-shadow: none;              /* remove the “card” effect */
+  padding: 0;                    /* no extra white padding around the field */
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
     #fieldSvg {
       width: 100%;
